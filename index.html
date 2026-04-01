@@ -233,7 +233,7 @@
       <div class="sc primary"><div class="sc-v" id="exLeads">--</div><div class="sc-l">Leads</div></div>
       <div class="sc"><div class="sc-v" id="exCos">--</div><div class="sc-l">Companies</div></div>
       <div class="sc"><div class="sc-v" id="exEmailS">--</div><div class="sc-l">Emails (Unique / Total)</div></div>
-      <div class="sc"><div class="sc-v" id="exLiS">--</div><div class="sc-l">LI Requests Sent</div></div>
+      <div class="sc"><div class="sc-v" id="exLiS">--</div><div class="sc-l">LinkedIn Requests Sent</div></div>
       <div class="sc primary"><div class="sc-v" id="exReply">0</div><div class="sc-l">Replies</div></div>
       <div class="sc primary"><div class="sc-v" id="exMeet">0</div><div class="sc-l">Meetings Booked</div></div>
     </div>
@@ -270,7 +270,7 @@
       <div class="sc primary"><div class="sc-v" id="d_leads">--</div><div class="sc-l">Leads</div></div>
       <div class="sc"><div class="sc-v" id="d_cos">--</div><div class="sc-l">Companies</div></div>
       <div class="sc"><div class="sc-v" id="d_email">--</div><div class="sc-l">Emails Sent</div></div>
-      <div class="sc"><div class="sc-v" id="d_li">--</div><div class="sc-l">LI Requests</div></div>
+      <div class="sc"><div class="sc-v" id="d_li">--</div><div class="sc-l">LinkedIn Requests</div></div>
       <div class="sc primary"><div class="sc-v" id="d_reply">--</div><div class="sc-l">Replies</div></div>
       <div class="sc primary"><div class="sc-v" id="d_meet">--</div><div class="sc-l">Meetings</div></div>
     </div>
@@ -308,7 +308,7 @@
     <div class="card mb16">
       <div class="card-hd"><div class="card-t">Channel Strategy Breakdown</div><div class="card-s">Hybrid vs single-channel</div></div>
       <div style="padding:0;">
-        <table class="dt"><thead><tr><th>Strategy</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">Delivered</th><th class="r">LI Sent</th><th class="r">LI Accepted</th><th class="r">Replies</th></tr></thead><tbody id="d_chTb"></tbody></table>
+        <table class="dt"><thead><tr><th>Strategy</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">Delivered</th><th class="r">LinkedIn Sent</th><th class="r">LinkedIn Accepted</th><th class="r">Replies</th></tr></thead><tbody id="d_chTb"></tbody></table>
       </div>
     </div>
 
@@ -329,7 +329,7 @@
       <div class="card-hd"><div class="card-t">Company Coverage</div><div class="card-s" id="d_coSub">--</div></div>
       <div style="padding:0;max-height:400px;overflow-y:auto;">
         <table class="dt" id="d_coTable">
-          <thead><tr><th>Company</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">Delivered</th><th class="r">LI Sent</th><th class="r">Replies</th></tr></thead>
+          <thead><tr><th>Company</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">Delivered</th><th class="r">LinkedIn Sent</th><th class="r">Replies</th></tr></thead>
           <tbody id="d_coBody"></tbody>
         </table>
       </div>
@@ -555,7 +555,7 @@ function render(){
       const liSched=S(rows,'LI Connection Actions');
       abH+=`<div class="exec-stat"><span class="exec-stat-k">Version ${l}</span><span class="exec-stat-v">${rows.length} leads</span></div>`;
       abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">Email sent / delivered</span><span class="exec-stat-v" style="font-size:12px;">${S(rows,'Email Sent')} / ${S(rows,'Email Delivered')}</span></div>`;
-      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">LI sent / accepted</span><span class="exec-stat-v" style="font-size:12px;">${liSent} / ${S(rows,'LI Connections Accepted')}</span></div>`;
+      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">LinkedIn sent / accepted</span><span class="exec-stat-v" style="font-size:12px;">${liSent} / ${S(rows,'LI Connections Accepted')}</span></div>`;
       if(liSched>0&&liSent===0){
         abH+=`<div style="padding-left:12px;font-size:9px;color:var(--g400);margin-top:-2px;margin-bottom:4px;">${liSched} LinkedIn actions scheduled, pending execution</div>`;
       }
@@ -658,7 +658,7 @@ function render(){
     abD+=`<div style="padding:0 14px 10px;${l==='B'?'border-left:1px solid var(--g100);':''}">
       <div style="font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;margin-bottom:8px;">Version ${l}</div>
       <div style="font-size:20px;font-weight:800;">${rows.length} <span style="font-size:11px;font-weight:500;color:var(--g400);">leads</span></div>
-      <ul class="ml" style="margin-top:8px;">${mli([['Email Sent',S(rows,'Email Sent')],['Delivered',S(rows,'Email Delivered')],['LI Sent',S(rows,'LI Connections Sent')],['LI Accepted',S(rows,'LI Connections Accepted')],['Replies',S(rows,'Total Replies')]])}</ul>
+      <ul class="ml" style="margin-top:8px;">${mli([['Email Sent',S(rows,'Email Sent')],['Delivered',S(rows,'Email Delivered')],['LinkedIn Sent',S(rows,'LI Connections Sent')],['LinkedIn Accepted',S(rows,'LI Connections Accepted')],['Replies',S(rows,'Total Replies')]])}</ul>
       ${S(rows,'LI Connection Actions')>0&&S(rows,'LI Connections Sent')===0?`<div style="font-size:9px;color:var(--g400);margin-top:4px;">${S(rows,'LI Connection Actions')} LinkedIn actions scheduled, pending execution</div>`:''}
     </div>`;
   });
