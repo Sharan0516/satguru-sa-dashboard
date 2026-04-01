@@ -271,7 +271,7 @@
 
     <div class="g2">
       <div class="card">
-        <div class="card-hd"><div class="card-t">A/B Message Testing</div><div class="card-s">Version A vs Version B (aggregated across senders)</div></div>
+        <div class="card-hd"><div class="card-t">A/B Message Testing</div><div class="card-s">V1 vs V2 (aggregated across senders)</div></div>
         <div class="card-bd" id="d_ab"></div>
       </div>
       <div class="card">
@@ -365,7 +365,20 @@ const GSHEET_ID='1Tm2r2PlI14uLcJ5ghsQgHG2b9o9hVzNB152WbV-JtsA';
 const SHEET_NAME='Lead Summary';
 
 // === NORMALIZATION ===
-function normVer(seq){if(!seq)return'N/A';const m=seq.match(/version[_\s]?([a-z0-9]+)/i);return m?m[1].toUpperCase():'N/A';}
+function normVer(seq){
+  if(!seq)return'N/A';
+  const s=String(seq);
+  // Match VersionA, Version_B, Version 3
+  const m=s.match(/version[_\s]?([a-z0-9]+)/i);
+  if(m)return m[1].toUpperCase();
+  // Match _V1, _V2, -V1 at word boundary
+  const vm=s.match(/[_\-]V(\d+)/i);
+  if(vm)return'V'+vm[1];
+  // Match standalone V1, V2
+  const vm2=s.match(/\bV(\d+)\b/i);
+  if(vm2)return'V'+vm2[1];
+  return'N/A';
+}
 function normSender(s){if(!s)return'Team';const l=s.toLowerCase();if(l.includes('renier'))return'Renier';if(l.includes('samihah')||l.includes('samhiah'))return'Samihah';if(l.includes('shaunelle'))return'Shaunelle';return'Team';}
 function normChannel(s){if(!s)return'Hybrid';const l=s.toLowerCase();if(l.includes('email_only')||l.includes('email only'))return'Email Only';if(l.includes('linkedin'))return'LinkedIn Only';return'Hybrid';}
 
@@ -473,10 +486,11 @@ function render(){
 
   // A/B
   const vG=G(D,'version');
-  const vA=vG['A']||[],vB=vG['B']||[];
+  // Support both old (A/B) and new (V1/V2) naming
+  const vA=vG['A']||vG['V1']||[],vB=vG['B']||vG['V2']||[];
   let abH='';
   if(vA.length||vB.length){
-    [['A',vA],['B',vB]].forEach(([l,rows])=>{
+    [[vG['V1']?'V1':'A',vA],[vG['V2']?'V2':'B',vB]].forEach(([l,rows])=>{
       const rep=S(rows,'Total Replies');
       abH+=`<div class="exec-stat"><span class="exec-stat-k">Version ${l}</span><span class="exec-stat-v">${rows.length} leads</span></div>`;
       abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">Emails sent / delivered</span><span class="exec-stat-v" style="font-size:12px;">${S(rows,'Email Sent')} / ${S(rows,'Email Delivered')}</span></div>`;
@@ -576,7 +590,7 @@ function render(){
 
   // A/B detail
   let abD='<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">';
-  [['A',vA],['B',vB]].forEach(([l,rows])=>{
+  [[vG['V1']?'V1':'A',vA],[vG['V2']?'V2':'B',vB]].forEach(([l,rows])=>{
     abD+=`<div style="padding:0 14px 10px;${l==='B'?'border-left:1px solid var(--g100);':''}">
       <div style="font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;margin-bottom:8px;">Version ${l}</div>
       <div style="font-size:20px;font-weight:800;">${rows.length} <span style="font-size:11px;font-weight:500;color:var(--g400);">leads</span></div>
@@ -621,7 +635,8 @@ function renderTracker(D){
   const emailLeads=D.filter(r=>N(r['Email Sent'])>0).length;
   const liLeads=D.filter(r=>N(r['LI Connections Sent'])>0).length;
   const vG=G(D,'version');
-  const vA=vG['A']||[],vB=vG['B']||[];
+  // Support both old (A/B) and new (V1/V2) naming
+  const vA=vG['A']||vG['V1']||[],vB=vG['B']||vG['V2']||[];
 
   // Summary cards
   document.getElementById('wt_cos').textContent=U(D,'Company Name').toLocaleString();
@@ -670,8 +685,8 @@ function renderTracker(D){
   overall+=dataRow('TOTAL RESPONSE',eR);
   overall+=dataRow('QUALIFIED RESPONSE',eR);
   overall+=pctRow('Reply Rate %',eR,eS);
-  overall+=dataRow('Version A Replies',S(vA,'Email Replies'));
-  overall+=dataRow('Version B Replies',S(vB,'Email Replies'));
+  overall+=dataRow('Version 1 Replies',S(vA,'Email Replies'));
+  overall+=dataRow('Version 2 Replies',S(vB,'Email Replies'));
   overall+=secRow('LINKEDIN');
   overall+=dataRow('UNIQUE LEADS TARGETED',liLeads);
   overall+=dataRow('CONN. ACTIONS SCHEDULED',S(D,'LI Connection Actions'));
@@ -683,8 +698,8 @@ function renderTracker(D){
   overall+=dataRow('TOTAL RESPONSE',lR);
   overall+=dataRow('QUALIFIED RESPONSE',lR);
   overall+=pctRow('Reply Rate %',lR,lS);
-  overall+=dataRow('Version A Replies',S(vA,'LI Replies'));
-  overall+=dataRow('Version B Replies',S(vB,'LI Replies'));
+  overall+=dataRow('Version 1 Replies',S(vA,'LI Replies'));
+  overall+=dataRow('Version 2 Replies',S(vB,'LI Replies'));
   overall+='</tbody>';
   document.getElementById('wtOverall').innerHTML=overall;
 
@@ -698,7 +713,7 @@ function renderTracker(D){
   const pScheduled=pharmaD.filter(r=>r['Conversation Stage']==='contact_scheduled').length;
   const pEmailLeads=pharmaD.filter(r=>N(r['Email Sent'])>0).length;
   const pLiLeads=pharmaD.filter(r=>N(r['LI Connections Sent'])>0).length;
-  const pVA=pharmaD.filter(r=>r.version==='A'),pVB=pharmaD.filter(r=>r.version==='B');
+  const pVA=pharmaD.filter(r=>r.version==='A'||r.version==='V1'),pVB=pharmaD.filter(r=>r.version==='B'||r.version==='V2');
   const pMeetings=pharmaD.filter(r=>r['Conversation Stage']==='meeting_booked').length;
 
   let s1=thRow()+'<tbody>';
