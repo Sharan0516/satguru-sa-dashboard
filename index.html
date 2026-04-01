@@ -528,7 +528,6 @@ function render(){
   const emailFunnel=[
     {label:'Leads Targeted (Email)',value:emailPool},
     {label:'Emails Sent',value:eUniq},
-    {label:'Emails Delivered',value:eD},
     {label:'Email Replies',value:eR},
   ];
   document.getElementById('exEmailFunnel').innerHTML=buildFunnel(emailFunnel,emailPool);
@@ -559,7 +558,9 @@ function render(){
       if(liSched>0&&liSent===0){
         abH+=`<div style="padding-left:12px;font-size:9px;color:var(--g400);margin-top:-2px;margin-bottom:4px;">${liSched} LinkedIn actions scheduled, pending execution</div>`;
       }
-      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">Replies</span><span class="exec-stat-v${rep>0?' hl':' z'}" style="font-size:12px;">${rep}</span></div>`;
+      const eRep=S(rows,'Email Replies'),lRep=S(rows,'LI Replies');
+      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">Email Replies</span><span class="exec-stat-v${eRep>0?' hl':' z'}" style="font-size:12px;">${eRep}</span></div>`;
+      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">LinkedIn Replies</span><span class="exec-stat-v${lRep>0?' hl':' z'}" style="font-size:12px;">${lRep}</span></div>`;
     });
   } else { abH='<div style="color:var(--g400);font-size:12px;">No A/B test data in current filter</div>'; }
   document.getElementById('exAB').innerHTML=abH;
@@ -625,7 +626,6 @@ function render(){
   funnelChart('chPipeEmail',[
     {label:'Leads Targeted',value:dEmailPool},
     {label:'Emails Sent',value:eUniq},
-    {label:'Delivered',value:eD},
     {label:'Replies',value:eR},
   ]);
   funnelChart('chPipeLi',[
@@ -642,7 +642,6 @@ function render(){
   document.getElementById('d_mE').innerHTML=mli([
     ['Total Emails Sent',eS],
     ['Sends per Prospect',eSendsPerLead],
-    ['Delivery Rate',eS>0?(eD/eS*100).toFixed(1)+'%':'--'],
     ['Bounced',eB],
     ['Reply Rate',eS>0?(eR/eS*100).toFixed(1)+'%':'--'],
   ]);
@@ -658,7 +657,7 @@ function render(){
     abD+=`<div style="padding:0 14px 10px;${l==='B'?'border-left:1px solid var(--g100);':''}">
       <div style="font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;margin-bottom:8px;">Version ${l}</div>
       <div style="font-size:20px;font-weight:800;">${rows.length} <span style="font-size:11px;font-weight:500;color:var(--g400);">leads</span></div>
-      <ul class="ml" style="margin-top:8px;">${mli([['Email Sent',S(rows,'Email Sent')],['Delivered',S(rows,'Email Delivered')],['LinkedIn Sent',S(rows,'LI Connections Sent')],['LinkedIn Accepted',S(rows,'LI Connections Accepted')],['Replies',S(rows,'Total Replies')]])}</ul>
+      <ul class="ml" style="margin-top:8px;">${mli([['Email Sent',S(rows,'Email Sent')],['LinkedIn Sent',S(rows,'LI Connections Sent')],['LinkedIn Accepted',S(rows,'LI Connections Accepted')],['Email Replies',S(rows,'Email Replies')],['LinkedIn Replies',S(rows,'LI Replies')]])}</ul>
       ${S(rows,'LI Connection Actions')>0&&S(rows,'LI Connections Sent')===0?`<div style="font-size:9px;color:var(--g400);margin-top:4px;">${S(rows,'LI Connection Actions')} LinkedIn actions scheduled, pending execution</div>`:''}
     </div>`;
   });
@@ -670,7 +669,8 @@ function render(){
   charts.push(new Chart(document.getElementById('chSender'),{type:'bar',data:{labels:sN.map(s=>`${s} (${sG[s].length})`),datasets:[
     {label:'Email Sent',data:sN.map(s=>S(sG[s],'Email Sent')),backgroundColor:'rgba(233,77,53,0.7)',borderRadius:4},
     {label:'LinkedIn Sent',data:sN.map(s=>S(sG[s],'LI Connections Sent')),backgroundColor:'rgba(148,163,184,0.5)',borderRadius:4},
-    {label:'Replies',data:sN.map(s=>S(sG[s],'Total Replies')),backgroundColor:'rgba(233,77,53,1)',borderRadius:4},
+    {label:'Email Replies',data:sN.map(s=>S(sG[s],'Email Replies')),backgroundColor:'rgba(233,77,53,1)',borderRadius:4},
+    {label:'LinkedIn Replies',data:sN.map(s=>S(sG[s],'LI Replies')),backgroundColor:'rgba(100,116,139,0.9)',borderRadius:4},
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{usePointStyle:true,pointStyle:'rectRounded',font:{family:'Inter',size:10},padding:10}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:10}}},y:{grid:{color:'#F1F5F9'},beginAtZero:true,ticks:{font:{size:9}}}}}}));
 
   // Channel table
