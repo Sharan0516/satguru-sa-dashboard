@@ -327,9 +327,11 @@
 
     <div class="card mb16">
       <div class="card-hd"><div class="card-t">Company Coverage</div><div class="card-s" id="d_coSub">--</div></div>
-      <div class="card-bd" style="padding:10px 18px;">
-        <div id="d_coBars"></div>
-        <div class="co-lg"><div class="co-li"><div class="co-ld" style="background:var(--brand);"></div>Email</div><div class="co-li"><div class="co-ld" style="background:var(--g300);"></div>LinkedIn</div><div class="co-li"><div class="co-ld" style="background:var(--g100);"></div>Queued</div></div>
+      <div style="padding:0;max-height:400px;overflow-y:auto;">
+        <table class="dt" id="d_coTable">
+          <thead><tr><th>Company</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">Delivered</th><th class="r">LI Sent</th><th class="r">Replies</th></tr></thead>
+          <tbody id="d_coBody"></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -740,10 +742,21 @@ function render(){
 
   // Company bars
   const coG=G(D,'Company Name');
-  const coA=Object.entries(coG).map(([n,r])=>({name:n,leads:r.length,email:S(r,'Email Sent'),li:S(r,'LI Connections Sent')})).sort((a,b)=>b.leads-a.leads).slice(0,15);
-  const mxL=coA[0]?.leads||1;
-  document.getElementById('d_coSub').textContent=`Top 15 of ${U(D,'Company Name')} companies`;
-  document.getElementById('d_coBars').innerHTML=coA.map((c,i)=>{const eW=(c.email/mxL)*100,lW=(c.li/mxL)*100,rest=Math.max(0,c.leads-c.email-c.li),rW=(rest/mxL)*100;return`<div class="co"><span class="co-r">${i+1}</span><span class="co-n" title="${c.name}">${c.name}</span><div class="co-bw">${c.email>0?`<div class="co-b" style="width:${eW}%;background:var(--brand);"></div>`:''}${c.li>0?`<div class="co-b" style="width:${lW}%;background:var(--g300);"></div>`:''}${rest>0?`<div class="co-b" style="width:${rW}%;background:var(--g100);"></div>`:''}</div><span class="co-c">${c.leads}</span></div>`}).join('');
+  const coA=Object.entries(coG).map(([n,r])=>({
+    name:n,leads:r.length,
+    email:S(r,'Email Sent'),delivered:S(r,'Email Delivered'),
+    li:S(r,'LI Connections Sent'),replies:S(r,'Total Replies')
+  })).sort((a,b)=>b.leads-a.leads);
+  const totalCos=coA.length;
+  document.getElementById('d_coSub').textContent=`${totalCos} companies targeted`;
+  document.getElementById('d_coBody').innerHTML=coA.map(c=>`<tr>
+    <td class="nm">${c.name}</td>
+    <td class="r">${c.leads}</td>
+    <td class="r">${c.email||'-'}</td>
+    <td class="r">${c.delivered||'-'}</td>
+    <td class="r">${c.li||'-'}</td>
+    <td class="r" style="font-weight:700;${c.replies>0?'color:var(--brand);':''}">${c.replies}</td>
+  </tr>`).join('');
 
   // === WEEKLY TRACKER ===
   renderTracker(D);
