@@ -308,7 +308,7 @@
     <div class="card mb16">
       <div class="card-hd"><div class="card-t">Channel Strategy Breakdown</div><div class="card-s">Hybrid vs single-channel</div></div>
       <div style="padding:0;">
-        <table class="dt"><thead><tr><th>Strategy</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">Delivered</th><th class="r">LinkedIn Sent</th><th class="r">LinkedIn Accepted</th><th class="r">Replies</th></tr></thead><tbody id="d_chTb"></tbody></table>
+        <table class="dt"><thead><tr><th>Strategy</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">LinkedIn Sent</th><th class="r">LinkedIn Accepted</th><th class="r">Email Replies</th><th class="r">LinkedIn Replies</th></tr></thead><tbody id="d_chTb"></tbody></table>
       </div>
     </div>
 
@@ -329,7 +329,7 @@
       <div class="card-hd"><div class="card-t">Company Coverage</div><div class="card-s" id="d_coSub">--</div></div>
       <div style="padding:0;max-height:400px;overflow-y:auto;">
         <table class="dt" id="d_coTable">
-          <thead><tr><th>Company</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">Delivered</th><th class="r">LinkedIn Sent</th><th class="r">Replies</th></tr></thead>
+          <thead><tr><th>Company</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">LinkedIn Sent</th><th class="r">Email Replies</th><th class="r">LinkedIn Replies</th></tr></thead>
           <tbody id="d_coBody"></tbody>
         </table>
       </div>
@@ -553,7 +553,7 @@ function render(){
       const liSent=S(rows,'LI Connections Sent');
       const liSched=S(rows,'LI Connection Actions');
       abH+=`<div class="exec-stat"><span class="exec-stat-k">Version ${l}</span><span class="exec-stat-v">${rows.length} leads</span></div>`;
-      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">Email sent / delivered</span><span class="exec-stat-v" style="font-size:12px;">${S(rows,'Email Sent')} / ${S(rows,'Email Delivered')}</span></div>`;
+      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">Email Sent</span><span class="exec-stat-v" style="font-size:12px;">${S(rows,'Email Sent')}</span></div>`;
       abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">LinkedIn sent / accepted</span><span class="exec-stat-v" style="font-size:12px;">${liSent} / ${S(rows,'LI Connections Accepted')}</span></div>`;
       if(liSched>0&&liSent===0){
         abH+=`<div style="padding-left:12px;font-size:9px;color:var(--g400);margin-top:-2px;margin-bottom:4px;">${liSched} LinkedIn actions scheduled, pending execution</div>`;
@@ -675,7 +675,7 @@ function render(){
 
   // Channel table
   const chG=G(D,'channel');
-  document.getElementById('d_chTb').innerHTML=['Hybrid','Email Only','LinkedIn Only'].filter(c=>chG[c]).map(c=>{const r=chG[c];return`<tr><td class="nm">${c}</td><td class="r">${r.length}</td><td class="r">${S(r,'Email Sent')}</td><td class="r">${S(r,'Email Delivered')}</td><td class="r">${S(r,'LI Connections Sent')}</td><td class="r">${S(r,'LI Connections Accepted')}</td><td class="r" style="font-weight:700;">${S(r,'Total Replies')}</td></tr>`}).join('');
+  document.getElementById('d_chTb').innerHTML=['Hybrid','Email Only','LinkedIn Only'].filter(c=>chG[c]).map(c=>{const r=chG[c];return`<tr><td class="nm">${c}</td><td class="r">${r.length}</td><td class="r">${S(r,'Email Sent')}</td><td class="r">${S(r,'LI Connections Sent')}</td><td class="r">${S(r,'LI Connections Accepted')}</td><td class="r" style="font-weight:700;">${S(r,'Email Replies')}</td><td class="r" style="font-weight:700;">${S(r,'LI Replies')}</td></tr>`}).join('');
 
   // Send timing charts - hidden until enough data
   /* UNCOMMENT WHEN READY:
@@ -743,8 +743,9 @@ function render(){
   const coG=G(D,'Company Name');
   const coA=Object.entries(coG).map(([n,r])=>({
     name:n,leads:r.length,
-    email:S(r,'Email Sent'),delivered:S(r,'Email Delivered'),
-    li:S(r,'LI Connections Sent'),replies:S(r,'Total Replies')
+    email:S(r,'Email Sent'),
+    li:S(r,'LI Connections Sent'),
+    eReplies:S(r,'Email Replies'),lReplies:S(r,'LI Replies')
   })).sort((a,b)=>b.leads-a.leads);
   const totalCos=coA.length;
   document.getElementById('d_coSub').textContent=`${totalCos} companies targeted`;
@@ -752,9 +753,9 @@ function render(){
     <td class="nm">${c.name}</td>
     <td class="r">${c.leads}</td>
     <td class="r">${c.email||'-'}</td>
-    <td class="r">${c.delivered||'-'}</td>
     <td class="r">${c.li||'-'}</td>
-    <td class="r" style="font-weight:700;${c.replies>0?'color:var(--brand);':''}">${c.replies}</td>
+    <td class="r" style="font-weight:700;${c.eReplies>0?'color:var(--brand);':''}">${c.eReplies}</td>
+    <td class="r" style="font-weight:700;${c.lReplies>0?'color:var(--brand);':''}">${c.lReplies}</td>
   </tr>`).join('');
 
   // === WEEKLY TRACKER ===
