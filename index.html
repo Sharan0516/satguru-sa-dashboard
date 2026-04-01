@@ -450,25 +450,27 @@ function render(){
     return h;
   }
 
-  // Email funnel
+  // Email funnel - starts from leads targeted via email (Hybrid + Email Only)
+  const emailPool=D.filter(r=>r.channel==='Hybrid'||r.channel==='Email Only').length;
   const emailFunnel=[
-    {label:'Total Leads',value:D.length},
-    {label:'Unique Leads Emailed',value:eUniq},
+    {label:'Leads Targeted (Email)',value:emailPool},
+    {label:'Emails Sent',value:eUniq},
     {label:'Emails Delivered',value:eD},
     {label:'Emails Opened',value:eO},
     {label:'Email Replies',value:eR},
   ];
-  document.getElementById('exEmailFunnel').innerHTML=buildFunnel(emailFunnel,D.length);
+  document.getElementById('exEmailFunnel').innerHTML=buildFunnel(emailFunnel,emailPool);
 
-  // LinkedIn funnel
+  // LinkedIn funnel - starts from leads targeted via LinkedIn (Hybrid + LinkedIn Only)
+  const liPool=D.filter(r=>r.channel==='Hybrid'||r.channel==='LinkedIn Only').length;
   const liFunnel=[
-    {label:'Total Leads',value:D.length},
+    {label:'Leads Targeted (LinkedIn)',value:liPool},
     {label:'Conn. Requests Sent',value:lS},
     {label:'Connections Accepted',value:aA},
     {label:'DMs Sent',value:lM},
     {label:'LinkedIn Replies',value:lR},
   ];
-  document.getElementById('exLiFunnel').innerHTML=buildFunnel(liFunnel,D.length);
+  document.getElementById('exLiFunnel').innerHTML=buildFunnel(liFunnel,liPool);
 
   // A/B
   const vG=G(D,'version');
@@ -517,19 +519,21 @@ function render(){
       }
     }));
   }
+  const dEmailPool=D.filter(r=>r.channel==='Hybrid'||r.channel==='Email Only').length;
+  const dLiPool=D.filter(r=>r.channel==='Hybrid'||r.channel==='LinkedIn Only').length;
   funnelChart('chPipeEmail',[
-    {label:'Total Leads',value:D.length},
-    {label:'Unique Leads Emailed',value:eUniq},
-    {label:'Emails Delivered',value:eD},
-    {label:'Emails Opened',value:eO},
-    {label:'Email Replies',value:eR},
+    {label:'Leads Targeted',value:dEmailPool},
+    {label:'Emails Sent',value:eUniq},
+    {label:'Delivered',value:eD},
+    {label:'Opened',value:eO},
+    {label:'Replies',value:eR},
   ]);
   funnelChart('chPipeLi',[
-    {label:'Total Leads',value:D.length},
+    {label:'Leads Targeted',value:dLiPool},
     {label:'Conn. Requests Sent',value:lS},
-    {label:'Connections Accepted',value:aA},
+    {label:'Accepted',value:aA},
     {label:'DMs Sent',value:lM},
-    {label:'LinkedIn Replies',value:lR},
+    {label:'Replies',value:lR},
   ]);
 
   // Channel metrics
