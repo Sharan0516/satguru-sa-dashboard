@@ -284,7 +284,7 @@
     <div class="card mb16">
       <div class="card-hd"><div class="card-t">Channel Strategy Breakdown</div><div class="card-s">Hybrid vs single-channel</div></div>
       <div style="padding:0;">
-        <table class="dt"><thead><tr><th>Strategy</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">Delivered</th><th class="r">LI Sent</th><th class="r">Accepted</th><th class="r">Replies</th></tr></thead><tbody id="d_chTb"></tbody></table>
+        <table class="dt"><thead><tr><th>Strategy</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">Delivered</th><th class="r">Opens</th><th class="r">LI Sent</th><th class="r">LI Accepted</th><th class="r">Replies</th></tr></thead><tbody id="d_chTb"></tbody></table>
       </div>
     </div>
 
@@ -383,7 +383,7 @@ function mli(items){return items.map(([k,v])=>{const z=v===0||v==='--'?' z':'';c
 // === STATE ===
 let ALL=[],FLT=[];
 let charts=[];
-const NUM=['Email Sent','Email Delivered','Email Bounced','Email Failed','Email Replies','LI Connection Actions','LI Connections Sent','LI Messages Sent','Pushed to Aimfox','Aimfox Conn Sent','Aimfox Accepted','Aimfox Replies','Total Touches','Total Replies'];
+const NUM=['Email Sent','Email Delivered','Email Bounced','Email Failed','Email Replies','Email Opens','Email Clicks','LI Connection Actions','LI Connections Sent','LI Connections Accepted','LI Messages Sent','LI Replies','Total Touches','Total Replies'];
 const FM={fSender:'sender',fChannel:'channel',fVersion:'version'};
 
 // === TABS ===
@@ -408,19 +408,18 @@ function render(){
   charts.forEach(c=>c.destroy());charts=[];
   const D=FLT;
   // Email metrics
-  const eUniq=D.filter(r=>N(r['Email Sent'])>0).length; // unique leads emailed
-  const eS=S(D,'Email Sent'); // total emails (incl multi-touch)
+  const eUniq=D.filter(r=>N(r['Email Sent'])>0).length;
+  const eS=S(D,'Email Sent');
   const eD=S(D,'Email Delivered'),eB=S(D,'Email Bounced'),eF=S(D,'Email Failed'),eR=S(D,'Email Replies');
+  const eO=S(D,'Email Opens'),eC=S(D,'Email Clicks');
   const eSendsPerLead=eUniq>0?(eS/eUniq).toFixed(1):'--';
   // LinkedIn funnel
-  const lActions=S(D,'LI Connection Actions'); // scheduled actions (the plan)
-  const lS=S(D,'LI Connections Sent'); // sent at step level
-  const lP=S(D,'Pushed to Aimfox'); // pushed to automation
-  const aS=S(D,'Aimfox Conn Sent'); // automation confirmed sent
-  const aA=S(D,'Aimfox Accepted'); // accepted
-  const lM=S(D,'LI Messages Sent'); // DMs sent after acceptance
-  const aR=S(D,'Aimfox Replies'); // replies via LinkedIn
-  const lUniq=D.filter(r=>N(r['LI Connections Sent'])>0).length; // unique leads with LI sent
+  const lActions=S(D,'LI Connection Actions');
+  const lS=S(D,'LI Connections Sent');
+  const aA=S(D,'LI Connections Accepted');
+  const lM=S(D,'LI Messages Sent');
+  const lR=S(D,'LI Replies');
+  const lUniq=D.filter(r=>N(r['LI Connections Sent'])>0).length;
   // Totals
   const tR=S(D,'Total Replies');
   const meets=D.filter(r=>r['Conversation Stage']==='meeting_booked').length;
@@ -455,8 +454,8 @@ function render(){
   const emailFunnel=[
     {label:'Total Leads',value:D.length},
     {label:'Unique Leads Emailed',value:eUniq},
-    {label:'Total Emails Sent',value:eS},
     {label:'Emails Delivered',value:eD},
+    {label:'Emails Opened',value:eO},
     {label:'Email Replies',value:eR},
   ];
   document.getElementById('exEmailFunnel').innerHTML=buildFunnel(emailFunnel,D.length);
@@ -467,7 +466,7 @@ function render(){
     {label:'Conn. Requests Sent',value:lS},
     {label:'Connections Accepted',value:aA},
     {label:'DMs Sent',value:lM},
-    {label:'LinkedIn Replies',value:aR},
+    {label:'LinkedIn Replies',value:lR},
   ];
   document.getElementById('exLiFunnel').innerHTML=buildFunnel(liFunnel,D.length);
 
@@ -521,35 +520,34 @@ function render(){
   funnelChart('chPipeEmail',[
     {label:'Total Leads',value:D.length},
     {label:'Unique Leads Emailed',value:eUniq},
-    {label:'Total Emails Sent',value:eS},
     {label:'Emails Delivered',value:eD},
+    {label:'Emails Opened',value:eO},
     {label:'Email Replies',value:eR},
   ]);
   funnelChart('chPipeLi',[
     {label:'Total Leads',value:D.length},
     {label:'Conn. Requests Sent',value:lS},
-    {label:'Confirmed Sent (Aimfox)',value:aS},
     {label:'Connections Accepted',value:aA},
     {label:'DMs Sent',value:lM},
-    {label:'LinkedIn Replies',value:aR},
+    {label:'LinkedIn Replies',value:lR},
   ]);
 
   // Channel metrics
-  const dR=eS>0?(eD/eS*100).toFixed(1)+'%':'--';
-  const aR2=lS>0?(aA/lS*100).toFixed(1)+'%':'--';
+  // (rates computed inline where needed)
   // Supplementary metrics below the funnel charts
   document.getElementById('d_mE').innerHTML=mli([
+    ['Total Emails Sent',eS],
     ['Sends per Prospect',eSendsPerLead],
-    ['Delivery Rate',dR],
+    ['Delivery Rate',eS>0?(eD/eS*100).toFixed(1)+'%':'--'],
+    ['Open Rate',eD>0?(eO/eD*100).toFixed(1)+'%':'--'],
     ['Bounced',eB],
-    ['Failed',eF],
+    ['Clicks',eC],
     ['Reply Rate',eS>0?(eR/eS*100).toFixed(1)+'%':'--'],
   ]);
   document.getElementById('d_mL').innerHTML=mli([
     ['Actions Scheduled',lActions],
-    ['Pushed to Aimfox',lP],
     ['Accept Rate',lS>0?(aA/lS*100).toFixed(1)+'%':'--'],
-    ['Reply Rate',lS>0?(aR/lS*100).toFixed(1)+'%':'--'],
+    ['Reply Rate',lS>0?(lR/lS*100).toFixed(1)+'%':'--'],
   ]);
 
   // A/B detail
@@ -558,7 +556,7 @@ function render(){
     abD+=`<div style="padding:0 14px 10px;${l==='B'?'border-left:1px solid var(--g100);':''}">
       <div style="font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;margin-bottom:8px;">Version ${l}</div>
       <div style="font-size:20px;font-weight:800;">${rows.length} <span style="font-size:11px;font-weight:500;color:var(--g400);">leads</span></div>
-      <ul class="ml" style="margin-top:8px;">${mli([['Email Sent',S(rows,'Email Sent')],['Delivered',S(rows,'Email Delivered')],['LI Sent',S(rows,'LI Connections Sent')],['Accepted',S(rows,'Aimfox Accepted')],['Replies',S(rows,'Total Replies')]])}</ul>
+      <ul class="ml" style="margin-top:8px;">${mli([['Email Sent',S(rows,'Email Sent')],['Delivered',S(rows,'Email Delivered')],['Opens',S(rows,'Email Opens')],['LI Sent',S(rows,'LI Connections Sent')],['LI Accepted',S(rows,'LI Connections Accepted')],['Replies',S(rows,'Total Replies')]])}</ul>
     </div>`;
   });
   abD+='</div>';
@@ -575,7 +573,7 @@ function render(){
 
   // Channel table
   const chG=G(D,'channel');
-  document.getElementById('d_chTb').innerHTML=['Hybrid','Email Only','LinkedIn Only'].filter(c=>chG[c]).map(c=>{const r=chG[c];return`<tr><td class="nm">${c}</td><td class="r">${r.length}</td><td class="r">${S(r,'Email Sent')}</td><td class="r">${S(r,'Email Delivered')}</td><td class="r">${S(r,'LI Connections Sent')}</td><td class="r">${S(r,'Aimfox Accepted')}</td><td class="r" style="font-weight:700;">${S(r,'Total Replies')}</td></tr>`}).join('');
+  document.getElementById('d_chTb').innerHTML=['Hybrid','Email Only','LinkedIn Only'].filter(c=>chG[c]).map(c=>{const r=chG[c];return`<tr><td class="nm">${c}</td><td class="r">${r.length}</td><td class="r">${S(r,'Email Sent')}</td><td class="r">${S(r,'Email Delivered')}</td><td class="r">${S(r,'Email Opens')}</td><td class="r">${S(r,'LI Connections Sent')}</td><td class="r">${S(r,'LI Connections Accepted')}</td><td class="r" style="font-weight:700;">${S(r,'Total Replies')}</td></tr>`}).join('');
 
   // Company bars
   const coG=G(D,'Company Name');
@@ -591,8 +589,8 @@ function render(){
 function renderTracker(D){
   // Compute all metrics
   const eS=S(D,'Email Sent'),eD=S(D,'Email Delivered'),eB=S(D,'Email Bounced'),eR=S(D,'Email Replies');
-  const lS=S(D,'LI Connections Sent'),lA=S(D,'Aimfox Accepted'),lMsgs=S(D,'LI Messages Sent'),lR=S(D,'Aimfox Replies');
-  const lPush=S(D,'Pushed to Aimfox'),afSent=S(D,'Aimfox Conn Sent');
+  const lS=S(D,'LI Connections Sent'),lA=S(D,'LI Connections Accepted'),lMsgs=S(D,'LI Messages Sent'),lR=S(D,'LI Replies');
+  // LI Pushed / Confirmed Sent are infrastructure fields, not shown to client
   const contacted=D.filter(r=>r['Conversation Stage']==='contacted').length;
   const scheduled=D.filter(r=>r['Conversation Stage']==='contact_scheduled').length;
   const tR=S(D,'Total Replies');
@@ -654,16 +652,17 @@ function renderTracker(D){
   overall+=dataRow('UNIQUE LEADS TARGETED',liLeads);
   overall+=dataRow('CONN. ACTIONS SCHEDULED',S(D,'LI Connection Actions'));
   overall+=dataRow('CONNECTION REQUESTS SENT',lS);
-  overall+=dataRow('PUSHED TO AIMFOX',lPush);
-  overall+=dataRow('CONFIRMED SENT (AIMFOX)',afSent);
+  overall+=dataRow('EMAILS OPENED',S(D,'Email Opens'));
+  overall+=dataRow('EMAIL CLICKS',S(D,'Email Clicks'));
+  overall+=pctRow('Open Rate %',S(D,'Email Opens'),eD);
   overall+=dataRow('CONNECTIONS ACCEPTED',lA);
   overall+=pctRow('Acceptance Rate %',lA,lS);
   overall+=dataRow('DMs SENT (POST-ACCEPT)',lMsgs);
   overall+=dataRow('TOTAL RESPONSE',lR);
   overall+=dataRow('QUALIFIED RESPONSE',lR);
   overall+=pctRow('Reply Rate %',lR,lS);
-  overall+=dataRow('Version A Replies',S(vA,'Aimfox Replies'));
-  overall+=dataRow('Version B Replies',S(vB,'Aimfox Replies'));
+  overall+=dataRow('Version A Replies',S(vA,'LI Replies'));
+  overall+=dataRow('Version B Replies',S(vB,'LI Replies'));
   overall+='</tbody>';
   document.getElementById('wtOverall').innerHTML=overall;
 
@@ -671,8 +670,8 @@ function renderTracker(D){
   // All current data is Pharma (except the 3 Travel leads)
   const pharmaD=D.filter(r=>{const s=(r['Sequence Name']||'').toLowerCase();return !s.includes('global travel')&&!s.includes('satguru travel');});
   const pES=S(pharmaD,'Email Sent'),pED=S(pharmaD,'Email Delivered'),pEB=S(pharmaD,'Email Bounced'),pER=S(pharmaD,'Email Replies');
-  const pLS=S(pharmaD,'LI Connections Sent'),pLA=S(pharmaD,'Aimfox Accepted'),pLM=S(pharmaD,'LI Messages Sent'),pLR=S(pharmaD,'Aimfox Replies');
-  const pLPush=S(pharmaD,'Pushed to Aimfox'),pAfSent=S(pharmaD,'Aimfox Conn Sent');
+  const pLS=S(pharmaD,'LI Connections Sent'),pLA=S(pharmaD,'LI Connections Accepted'),pLM=S(pharmaD,'LI Messages Sent'),pLR=S(pharmaD,'LI Replies');
+  // pharma LI metrics use clean field names
   const pContacted=pharmaD.filter(r=>r['Conversation Stage']==='contacted').length;
   const pScheduled=pharmaD.filter(r=>r['Conversation Stage']==='contact_scheduled').length;
   const pEmailLeads=pharmaD.filter(r=>N(r['Email Sent'])>0).length;
@@ -700,8 +699,8 @@ function renderTracker(D){
   s1+=dataRow('# Unique Leads Targeted',pLiLeads);
   s1+=dataRow('# Conn. Actions Scheduled',S(pharmaD,'LI Connection Actions'));
   s1+=dataRow('# Connection Requests Sent',pLS);
-  s1+=dataRow('# Pushed to Aimfox',pLPush);
-  s1+=dataRow('# Confirmed Sent (Aimfox)',pAfSent);
+  s1+=dataRow('# Emails Opened',S(pharmaD,'Email Opens'));
+  s1+=pctRow('Open Rate %',S(pharmaD,'Email Opens'),pED);
   s1+=dataRow('# Connections Accepted',pLA);
   s1+=pctRow('Acceptance Rate %',pLA,pLS);
   s1+=dataRow('# DMs Sent (post-accept)',pLM);
