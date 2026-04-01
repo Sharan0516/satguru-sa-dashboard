@@ -288,6 +288,17 @@
       </div>
     </div>
 
+    <div class="g2">
+      <div class="card">
+        <div class="card-hd"><div class="card-t">Send Day Distribution</div><div class="card-s">Outreach activity by day of week (SAST)</div></div>
+        <div class="card-bd"><div class="chart-w"><canvas id="chSendDay"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-t">Send Time Distribution</div><div class="card-s">Outreach activity by time bucket (SAST)</div></div>
+        <div class="card-bd"><div class="chart-w"><canvas id="chSendTime"></canvas></div></div>
+      </div>
+    </div>
+
     <div class="card mb16">
       <div class="card-hd"><div class="card-t">Company Coverage</div><div class="card-s" id="d_coSub">--</div></div>
       <div class="card-bd" style="padding:10px 18px;">
@@ -611,6 +622,65 @@ function render(){
   // Channel table
   const chG=G(D,'channel');
   document.getElementById('d_chTb').innerHTML=['Hybrid','Email Only','LinkedIn Only'].filter(c=>chG[c]).map(c=>{const r=chG[c];return`<tr><td class="nm">${c}</td><td class="r">${r.length}</td><td class="r">${S(r,'Email Sent')}</td><td class="r">${S(r,'Email Delivered')}</td><td class="r">${S(r,'LI Connections Sent')}</td><td class="r">${S(r,'LI Connections Accepted')}</td><td class="r" style="font-weight:700;">${S(r,'Total Replies')}</td></tr>`}).join('');
+
+  // Send timing charts
+  // Derive send day/time from last_outbound or campaign_started (UTC -> SAST +2h)
+  const dayOrder=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const timeOrder=['6-9am','9am-12pm','12-3pm','3-6pm','6-9pm','Off-hours'];
+  const dayCounts={};dayOrder.forEach(d=>{dayCounts[d]=0;});
+  const timeCounts={};timeOrder.forEach(t=>{timeCounts[t]=0;});
+
+  D.forEach(r=>{
+    // Try Send Day column first (from Apps Script), else derive
+    let day=r['Send Day (SAST)']||'';
+    let bucket=r['Send Time Bucket']||'';
+    if(!day){
+      const ts=r['Last Outbound']||r['Campaign Started']||'';
+      if(ts){
+        try{
+          const dt=new Date(ts);
+          if(!isNaN(dt.getTime())){
+            const sast=new Date(dt.getTime()+2*3600000);
+            day=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][sast.getUTCDay()];
+            const h=sast.getUTCHours();
+            if(h>=6&&h<9)bucket='6-9am';
+            else if(h>=9&&h<12)bucket='9am-12pm';
+            else if(h>=12&&h<15)bucket='12-3pm';
+            else if(h>=15&&h<18)bucket='3-6pm';
+            else if(h>=18&&h<21)bucket='6-9pm';
+            else bucket='Off-hours';
+          }
+        }catch(e){}
+      }
+    }
+    if(day&&dayCounts[day]!==undefined)dayCounts[day]++;
+    if(bucket&&timeCounts[bucket]!==undefined)timeCounts[bucket]++;
+  });
+
+  const dayData=dayOrder.map(d=>dayCounts[d]);
+  const timeData=timeOrder.map(t=>timeCounts[t]);
+  const dayMax=Math.max(...dayData)||1;
+  const timeMax=Math.max(...timeData)||1;
+
+  charts.push(new Chart(document.getElementById('chSendDay'),{
+    type:'bar',
+    data:{labels:dayOrder.map(d=>d.substring(0,3)),datasets:[{data:dayData,backgroundColor:dayData.map(v=>`rgba(233,77,53,${0.3+0.7*(v/dayMax)})`),borderRadius:4,barPercentage:0.65}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:11}}},y:{grid:{color:'#F1F5F9'},beginAtZero:true,ticks:{font:{size:10}}}},
+      animation:{onComplete:function(){const ch=this;const cx=ch.ctx;cx.font='700 11px Inter';cx.textBaseline='bottom';cx.textAlign='center';ch.data.datasets[0].data.forEach((v,i)=>{if(v>0){const m=ch.getDatasetMeta(0).data[i];cx.fillStyle='#334155';cx.fillText(v,m.x,m.y-4);}});}}
+    }
+  }));
+
+  charts.push(new Chart(document.getElementById('chSendTime'),{
+    type:'bar',
+    data:{labels:timeOrder,datasets:[{data:timeData,backgroundColor:timeData.map(v=>`rgba(233,77,53,${0.3+0.7*(v/timeMax)})`),borderRadius:4,barPercentage:0.65}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:10}}},y:{grid:{color:'#F1F5F9'},beginAtZero:true,ticks:{font:{size:10}}}},
+      animation:{onComplete:function(){const ch=this;const cx=ch.ctx;cx.font='700 11px Inter';cx.textBaseline='bottom';cx.textAlign='center';ch.data.datasets[0].data.forEach((v,i)=>{if(v>0){const m=ch.getDatasetMeta(0).data[i];cx.fillStyle='#334155';cx.fillText(v,m.x,m.y-4);}});}}
+    }
+  }));
 
   // Company bars
   const coG=G(D,'Company Name');
