@@ -284,7 +284,7 @@
     <div class="card mb16">
       <div class="card-hd"><div class="card-t">Channel Strategy Breakdown</div><div class="card-s">Hybrid vs single-channel</div></div>
       <div style="padding:0;">
-        <table class="dt"><thead><tr><th>Strategy</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">Delivered</th><th class="r">Opens</th><th class="r">LI Sent</th><th class="r">LI Accepted</th><th class="r">Replies</th></tr></thead><tbody id="d_chTb"></tbody></table>
+        <table class="dt"><thead><tr><th>Strategy</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">Delivered</th><th class="r">LI Sent</th><th class="r">LI Accepted</th><th class="r">Replies</th></tr></thead><tbody id="d_chTb"></tbody></table>
       </div>
     </div>
 
@@ -456,7 +456,6 @@ function render(){
     {label:'Leads Targeted (Email)',value:emailPool},
     {label:'Emails Sent',value:eUniq},
     {label:'Emails Delivered',value:eD},
-    {label:'Emails Opened',value:eO},
     {label:'Email Replies',value:eR},
   ];
   document.getElementById('exEmailFunnel').innerHTML=buildFunnel(emailFunnel,emailPool);
@@ -525,7 +524,6 @@ function render(){
     {label:'Leads Targeted',value:dEmailPool},
     {label:'Emails Sent',value:eUniq},
     {label:'Delivered',value:eD},
-    {label:'Opened',value:eO},
     {label:'Replies',value:eR},
   ]);
   funnelChart('chPipeLi',[
@@ -543,9 +541,7 @@ function render(){
     ['Total Emails Sent',eS],
     ['Sends per Prospect',eSendsPerLead],
     ['Delivery Rate',eS>0?(eD/eS*100).toFixed(1)+'%':'--'],
-    ['Open Rate',eD>0?(eO/eD*100).toFixed(1)+'%':'--'],
     ['Bounced',eB],
-    ['Clicks',eC],
     ['Reply Rate',eS>0?(eR/eS*100).toFixed(1)+'%':'--'],
   ]);
   document.getElementById('d_mL').innerHTML=mli([
@@ -560,7 +556,7 @@ function render(){
     abD+=`<div style="padding:0 14px 10px;${l==='B'?'border-left:1px solid var(--g100);':''}">
       <div style="font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;margin-bottom:8px;">Version ${l}</div>
       <div style="font-size:20px;font-weight:800;">${rows.length} <span style="font-size:11px;font-weight:500;color:var(--g400);">leads</span></div>
-      <ul class="ml" style="margin-top:8px;">${mli([['Email Sent',S(rows,'Email Sent')],['Delivered',S(rows,'Email Delivered')],['Opens',S(rows,'Email Opens')],['LI Sent',S(rows,'LI Connections Sent')],['LI Accepted',S(rows,'LI Connections Accepted')],['Replies',S(rows,'Total Replies')]])}</ul>
+      <ul class="ml" style="margin-top:8px;">${mli([['Email Sent',S(rows,'Email Sent')],['Delivered',S(rows,'Email Delivered')],['LI Sent',S(rows,'LI Connections Sent')],['LI Accepted',S(rows,'LI Connections Accepted')],['Replies',S(rows,'Total Replies')]])}</ul>
     </div>`;
   });
   abD+='</div>';
@@ -577,7 +573,7 @@ function render(){
 
   // Channel table
   const chG=G(D,'channel');
-  document.getElementById('d_chTb').innerHTML=['Hybrid','Email Only','LinkedIn Only'].filter(c=>chG[c]).map(c=>{const r=chG[c];return`<tr><td class="nm">${c}</td><td class="r">${r.length}</td><td class="r">${S(r,'Email Sent')}</td><td class="r">${S(r,'Email Delivered')}</td><td class="r">${S(r,'Email Opens')}</td><td class="r">${S(r,'LI Connections Sent')}</td><td class="r">${S(r,'LI Connections Accepted')}</td><td class="r" style="font-weight:700;">${S(r,'Total Replies')}</td></tr>`}).join('');
+  document.getElementById('d_chTb').innerHTML=['Hybrid','Email Only','LinkedIn Only'].filter(c=>chG[c]).map(c=>{const r=chG[c];return`<tr><td class="nm">${c}</td><td class="r">${r.length}</td><td class="r">${S(r,'Email Sent')}</td><td class="r">${S(r,'Email Delivered')}</td><td class="r">${S(r,'LI Connections Sent')}</td><td class="r">${S(r,'LI Connections Accepted')}</td><td class="r" style="font-weight:700;">${S(r,'Total Replies')}</td></tr>`}).join('');
 
   // Company bars
   const coG=G(D,'Company Name');
@@ -656,9 +652,7 @@ function renderTracker(D){
   overall+=dataRow('UNIQUE LEADS TARGETED',liLeads);
   overall+=dataRow('CONN. ACTIONS SCHEDULED',S(D,'LI Connection Actions'));
   overall+=dataRow('CONNECTION REQUESTS SENT',lS);
-  overall+=dataRow('EMAILS OPENED',S(D,'Email Opens'));
-  overall+=dataRow('EMAIL CLICKS',S(D,'Email Clicks'));
-  overall+=pctRow('Open Rate %',S(D,'Email Opens'),eD);
+  // Opens/clicks removed - not reliable
   overall+=dataRow('CONNECTIONS ACCEPTED',lA);
   overall+=pctRow('Acceptance Rate %',lA,lS);
   overall+=dataRow('DMs SENT (POST-ACCEPT)',lMsgs);
@@ -703,8 +697,7 @@ function renderTracker(D){
   s1+=dataRow('# Unique Leads Targeted',pLiLeads);
   s1+=dataRow('# Conn. Actions Scheduled',S(pharmaD,'LI Connection Actions'));
   s1+=dataRow('# Connection Requests Sent',pLS);
-  s1+=dataRow('# Emails Opened',S(pharmaD,'Email Opens'));
-  s1+=pctRow('Open Rate %',S(pharmaD,'Email Opens'),pED);
+  // Opens/clicks removed - not reliable
   s1+=dataRow('# Connections Accepted',pLA);
   s1+=pctRow('Acceptance Rate %',pLA,pLS);
   s1+=dataRow('# DMs Sent (post-accept)',pLM);
