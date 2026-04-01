@@ -213,8 +213,8 @@
       <div class="sc primary"><div class="sc-v" id="exMeet">0</div><div class="sc-l">Meetings Booked</div></div>
     </div>
 
-    <!-- Lead Enrichment (compact) -->
-    <div style="display:flex;gap:10px;margin-bottom:16px;" id="exEnrichment"></div>
+    <!-- Lead Enrichment (inline badges below scoreboard) -->
+    <div id="exEnrichment" style="display:flex;gap:8px;margin-bottom:16px;"></div>
 
     <div class="exec-grid" id="exGrid">
       <!-- Email Funnel -->
@@ -489,9 +489,10 @@ function render(){
 
   function enrichChip(label,count){
     const pct=total>0?(count/total*100).toFixed(0):0;
-    return `<div style="flex:1;background:var(--white);border:1px solid var(--g200);border-radius:var(--radius-sm);padding:10px 14px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;">
-      <span style="font-size:11px;color:var(--g500);">${label}</span>
-      <span style="font-size:14px;font-weight:800;color:var(--g900);">${count} <span style="font-size:10px;font-weight:500;color:var(--g400);">(${pct}%)</span></span>
+    return `<div style="display:inline-flex;align-items:center;gap:6px;background:var(--g50);border:1px solid var(--g200);border-radius:6px;padding:5px 10px;">
+      <span style="font-size:10px;color:var(--g500);">${label}:</span>
+      <span style="font-size:12px;font-weight:700;color:var(--g900);">${count}</span>
+      <span style="font-size:9px;color:var(--g400);">(${pct}%)</span>
     </div>`;
   }
   document.getElementById('exEnrichment').innerHTML=
