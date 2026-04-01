@@ -159,13 +159,38 @@
   .spinner { width:14px; height:14px; border:2px solid var(--g200); border-top-color:var(--brand); border-radius:50%; animation:spin 0.5s linear infinite; margin-right:8px; }
   @keyframes spin { to { transform:rotate(360deg); } }
   .footer { text-align:center; padding:24px 0 8px; font-size:10px; color:var(--g400); }
+
+  /* Password gate */
+  .pw-overlay { position:fixed; inset:0; background:var(--g50); z-index:9999; display:flex; align-items:center; justify-content:center; }
+  .pw-box { background:var(--white); border:1px solid var(--g200); border-radius:var(--radius); padding:32px; box-shadow:0 8px 24px rgba(15,23,42,0.1); text-align:center; max-width:360px; width:90%; }
+  .pw-box img { width:40px; height:40px; border-radius:10px; margin-bottom:16px; }
+  .pw-box h2 { font-size:16px; font-weight:700; margin-bottom:4px; }
+  .pw-box p { font-size:12px; color:var(--g400); margin-bottom:20px; }
+  .pw-input { width:100%; padding:10px 14px; border:1px solid var(--g200); border-radius:8px; font-size:14px; font-family:inherit; text-align:center; outline:none; }
+  .pw-input:focus { border-color:var(--brand); }
+  .pw-btn { width:100%; padding:10px; margin-top:10px; background:var(--brand); color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; }
+  .pw-btn:hover { opacity:0.9; }
+  .pw-err { color:var(--brand); font-size:11px; margin-top:8px; display:none; }
   .footer a { color:var(--brand); text-decoration:none; font-weight:600; }
 
   @media (max-width:900px) { .sboard,.exec-grid { grid-template-columns:repeat(2,1fr); } .g2,.g3 { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
-<div class="app">
+
+<!-- Password Gate -->
+<div class="pw-overlay" id="pwOverlay">
+  <div class="pw-box">
+    <img src="data:image/png;base64,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" alt="lumif.ai">
+    <h2>Satguru SA Dashboard</h2>
+    <p>Enter password to view</p>
+    <input type="password" class="pw-input" id="pwInput" placeholder="Password" autofocus>
+    <button class="pw-btn" id="pwBtn">View Dashboard</button>
+    <div class="pw-err" id="pwErr">Incorrect password</div>
+  </div>
+</div>
+
+<div class="app" style="display:none;" id="appMain">
 
   <!-- HEADER -->
   <div class="hdr">
@@ -234,10 +259,6 @@
       </div>
     </div>
 
-    <div class="exec-note">
-      <div class="exec-note-title">What to Expect</div>
-      <div class="exec-note-text" id="exNote"></div>
-    </div>
   </div>
 
   <!-- ============================================================ -->
@@ -529,18 +550,12 @@ function render(){
     [['A',vA],['B',vB]].forEach(([l,rows])=>{
       const rep=S(rows,'Total Replies');
       abH+=`<div class="exec-stat"><span class="exec-stat-k">Version ${l}</span><span class="exec-stat-v">${rows.length} leads</span></div>`;
-      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">Emails sent / delivered</span><span class="exec-stat-v" style="font-size:12px;">${S(rows,'Email Sent')} / ${S(rows,'Email Delivered')}</span></div>`;
+      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">Email sent / delivered</span><span class="exec-stat-v" style="font-size:12px;">${S(rows,'Email Sent')} / ${S(rows,'Email Delivered')}</span></div>`;
+      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">LI sent / accepted</span><span class="exec-stat-v" style="font-size:12px;">${S(rows,'LI Connections Sent')} / ${S(rows,'LI Connections Accepted')}</span></div>`;
       abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">Replies</span><span class="exec-stat-v${rep>0?' hl':' z'}" style="font-size:12px;">${rep}</span></div>`;
     });
   } else { abH='<div style="color:var(--g400);font-size:12px;">No A/B test data in current filter</div>'; }
   document.getElementById('exAB').innerHTML=abH;
-
-  // Expectations
-  const daysLive=Math.max(1,Math.round((Date.now()-new Date(ALL[0]?.['Campaign Started']||Date.now()).getTime())/(86400000)));
-  document.getElementById('exNote').innerHTML=`Campaign is <strong>${daysLive} day${daysLive>1?'s':''}</strong> old. Based on prior campaigns with this team:<br>
-    &bull; LinkedIn acceptance rate averaged <strong>16.7%</strong> (Renier 19.1%, Samihah 16.9%)<br>
-    &bull; Most email replies came after the <strong>2nd or 3rd message</strong> in the sequence<br>
-    &bull; <strong>${D.filter(r=>r['Conversation Stage']==='contact_scheduled').length}</strong> leads still have scheduled touches that haven't fired yet`;
 
   // === DETAILED VIEW ===
   document.getElementById('d_leads').textContent=D.length.toLocaleString();
@@ -861,6 +876,28 @@ function renderTracker(D){
   s2+=dataRow('Total Meetings Booked','--','--');
   s2+='</tbody>';
   document.getElementById('wtS2').innerHTML=s2;
+}
+
+// === PASSWORD GATE ===
+const PW_HASH='satguru2026'; // Change this password
+function checkPw(){
+  const input=document.getElementById('pwInput').value;
+  if(input===PW_HASH){
+    document.getElementById('pwOverlay').style.display='none';
+    document.getElementById('appMain').style.display='';
+    sessionStorage.setItem('pw_ok','1');
+  } else {
+    document.getElementById('pwErr').style.display='block';
+    document.getElementById('pwInput').value='';
+    document.getElementById('pwInput').focus();
+  }
+}
+document.getElementById('pwBtn').addEventListener('click',checkPw);
+document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkPw();});
+// Auto-unlock if already authenticated this session
+if(sessionStorage.getItem('pw_ok')==='1'){
+  document.getElementById('pwOverlay').style.display='none';
+  document.getElementById('appMain').style.display='';
 }
 
 // === ACCORDION ===
