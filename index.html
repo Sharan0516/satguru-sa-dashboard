@@ -772,6 +772,8 @@ async function init(){
     const resp=await fetch(url);if(!resp.ok)throw new Error(`HTTP ${resp.status}`);
     ALL=parseCSV(await resp.text());
     ALL.forEach(r=>{NUM.forEach(f=>{if(r[f]!==undefined)r[f]=N(r[f])});r.version=normVer(r['Sequence Name']);r.sender=r['Sender']||normSender(r['Sequence Name']);r.channel=r['Channel Strategy']||normChannel(r['Sequence Name'])});
+    // Exclude test leads (Team/internal lumif.ai leads)
+    ALL=ALL.filter(r=>r.sender!=='Team');
     try{const dates=ALL.map(r=>r['Campaign Started']).filter(Boolean).sort();if(dates[0]){const d=new Date(dates[0]);document.getElementById('campDate').textContent=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});document.getElementById('weekBadge').textContent=`Week ${Math.max(1,Math.ceil((Date.now()-d.getTime())/(7*86400000)))}`}}catch(e){}
     document.getElementById('updDate').textContent=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
     popFilters();FLT=[...ALL];
