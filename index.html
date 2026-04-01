@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Satguru SA Outreach Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #E94D35;
+    --brand-70: rgba(233,77,53,0.7);
+    --brand-35: rgba(233,77,53,0.35);
+    --brand-20: rgba(233,77,53,0.2);
+    --brand-10: rgba(233,77,53,0.1);
+    --brand-05: rgba(233,77,53,0.05);
+    --g900: #0F172A; --g700: #334155; --g600: #475569; --g500: #64748B;
+    --g400: #94A3B8; --g300: #CBD5E1; --g200: #E2E8F0; --g100: #F1F5F9; --g50: #F8FAFC;
+    --white: #FFFFFF;
+    --radius: 14px; --radius-sm: 8px;
+    --shadow: 0 1px 2px rgba(15,23,42,0.04);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',system-ui,sans-serif; background:var(--g50); color:var(--g900); -webkit-font-smoothing:antialiased; line-height:1.5; }
+  .app { max-width:1320px; margin:0 auto; padding:24px 32px 48px; }
+
+  /* Header */
+  .hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .hdr-left { display:flex; align-items:center; gap:12px; }
+  .logo { width:30px; height:30px; background:var(--brand); border-radius:7px; display:flex; align-items:center; justify-content:center; color:white; font-weight:800; font-size:13px; }
+  .hdr-title { font-size:16px; font-weight:700; }
+  .hdr-sub { font-size:11px; color:var(--g400); }
+  .hdr-right { display:flex; align-items:center; gap:12px; }
+  .week-pill { background:var(--brand-10); color:var(--brand); font-size:10px; font-weight:700; padding:4px 10px; border-radius:14px; letter-spacing:0.3px; }
+  .hdr-meta { font-size:10px; color:var(--g400); text-align:right; line-height:1.6; }
+
+  /* Nav tabs */
+  .nav { display:flex; gap:0; background:var(--white); border:1px solid var(--g200); border-radius:var(--radius-sm); margin-bottom:16px; overflow:hidden; box-shadow:var(--shadow); }
+  .nav-tab { padding:10px 20px; font-size:12px; font-weight:600; color:var(--g500); cursor:pointer; border-right:1px solid var(--g100); transition:all 0.15s; user-select:none; }
+  .nav-tab:last-child { border-right:none; }
+  .nav-tab:hover { color:var(--g700); background:var(--g50); }
+  .nav-tab.active { color:var(--brand); background:var(--brand-05); }
+
+  /* Filter bar */
+  .fbar { display:flex; align-items:center; gap:8px; background:var(--white); border:1px solid var(--g200); border-radius:var(--radius-sm); padding:8px 12px; margin-bottom:16px; flex-wrap:wrap; box-shadow:var(--shadow); }
+  .fbar-label { font-size:10px; font-weight:700; color:var(--g400); text-transform:uppercase; letter-spacing:0.5px; }
+  .fsel { appearance:none; background:var(--g50) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center; border:1px solid var(--g200); border-radius:6px; padding:5px 24px 5px 9px; font-size:11px; font-weight:500; color:var(--g700); font-family:inherit; cursor:pointer; min-width:120px; }
+  .fsel:focus { outline:none; border-color:var(--brand); }
+  .fsep { width:1px; height:22px; background:var(--g200); }
+  .fcount { font-size:10px; color:var(--g400); font-weight:600; }
+  .freset { background:none; border:1px solid var(--g200); border-radius:5px; padding:5px 10px; font-size:10px; font-weight:600; color:var(--g400); cursor:pointer; font-family:inherit; margin-left:auto; }
+  .freset:hover { color:var(--brand); border-color:var(--brand); }
+
+  /* Cards */
+  .card { background:var(--white); border:1px solid var(--g200); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+  .card-hd { padding:14px 18px 10px; border-bottom:1px solid var(--g100); }
+  .card-t { font-size:13px; font-weight:700; }
+  .card-s { font-size:10px; color:var(--g400); margin-top:1px; }
+  .card-bd { padding:14px 18px; }
+
+  /* Grids */
+  .g2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+  .g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:16px; }
+  .mb16 { margin-bottom:16px; }
+
+  /* Scoreboard */
+  .sboard { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+  .sc { background:var(--white); border:1px solid var(--g200); border-radius:var(--radius-sm); padding:16px 14px 12px; box-shadow:var(--shadow); }
+  .sc.primary { border-top:3px solid var(--brand); }
+  .sc-v { font-size:28px; font-weight:800; margin-bottom:1px; }
+  .sc.primary .sc-v { color:var(--brand); }
+  .sc-l { font-size:10px; color:var(--g400); font-weight:500; text-transform:uppercase; letter-spacing:0.3px; }
+
+  /* Metric list */
+  .ml { list-style:none; }
+  .mi { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--g100); font-size:12px; }
+  .mi:last-child { border-bottom:none; }
+  .mk { color:var(--g500); }
+  .mv { font-weight:700; font-variant-numeric:tabular-nums; }
+  .mv.z { color:var(--g300); }
+  .mv.hl { color:var(--brand); }
+
+  /* Benchmark */
+  .bench { display:flex; align-items:center; gap:6px; padding:8px 12px; margin:0 18px 14px; background:var(--brand-05); border-radius:6px; font-size:10px; color:var(--g500); }
+  .bdot { width:4px; height:4px; border-radius:50%; background:var(--brand); flex-shrink:0; }
+
+  /* Tables */
+  .dt { width:100%; border-collapse:collapse; font-size:11px; }
+  .dt th { text-align:left; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:var(--g400); padding:8px 12px; background:var(--g50); border-bottom:1px solid var(--g200); }
+  .dt th.r { text-align:right; }
+  .dt td { padding:9px 12px; border-bottom:1px solid var(--g100); color:var(--g700); }
+  .dt td.r { text-align:right; font-variant-numeric:tabular-nums; }
+  .dt tr:last-child td { border-bottom:none; }
+  .dt .nm { font-weight:600; color:var(--g900); }
+  .badge { display:inline-block; font-size:9px; font-weight:700; padding:2px 6px; border-radius:3px; }
+  .b-brand { background:var(--brand-10); color:var(--brand); }
+  .b-gray { background:var(--g100); color:var(--g500); }
+
+  /* Company bars */
+  .co { display:flex; align-items:center; padding:3px 0; gap:8px; }
+  .co-r { width:16px; font-size:9px; color:var(--g400); text-align:right; font-weight:600; flex-shrink:0; }
+  .co-n { width:175px; font-size:10px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; color:var(--g700); }
+  .co-bw { flex:1; display:flex; gap:1px; height:14px; }
+  .co-b { height:100%; border-radius:2px; min-width:1px; }
+  .co-c { width:22px; font-size:10px; font-weight:700; color:var(--g600); text-align:right; flex-shrink:0; }
+  .co-lg { display:flex; gap:14px; padding-top:8px; }
+  .co-li { display:flex; align-items:center; gap:4px; font-size:9px; color:var(--g400); }
+  .co-ld { width:7px; height:7px; border-radius:2px; }
+
+  /* Chart */
+  .chart-w { position:relative; height:220px; }
+
+  /* Executive view */
+  .exec-hero { text-align:center; padding:32px 20px 24px; }
+  .exec-big { font-size:48px; font-weight:900; color:var(--brand); line-height:1; }
+  .exec-sub { font-size:14px; color:var(--g500); margin-top:6px; }
+  .exec-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
+  .exec-card { background:var(--white); border:1px solid var(--g200); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
+  .exec-card-title { font-size:11px; font-weight:700; color:var(--g400); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; }
+  .exec-stat { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--g100); }
+  .exec-stat:last-child { border-bottom:none; }
+  .exec-stat-k { font-size:13px; color:var(--g600); }
+  .exec-stat-v { font-size:13px; font-weight:700; }
+  .exec-note { background:var(--brand-05); border:1px solid var(--brand-20); border-radius:var(--radius-sm); padding:14px 18px; margin-top:20px; }
+  .exec-note-title { font-size:11px; font-weight:700; color:var(--brand); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+  .exec-note-text { font-size:12px; color:var(--g600); line-height:1.6; }
+
+  /* Weekly tracker */
+  .wt { width:100%; border-collapse:collapse; font-size:11px; }
+  .wt th { text-align:left; font-size:10px; font-weight:700; color:var(--g400); padding:8px 10px; background:var(--g50); border:1px solid var(--g200); }
+  .wt th.r { text-align:right; }
+  .wt td { padding:8px 10px; border:1px solid var(--g100); color:var(--g700); }
+  .wt td.r { text-align:right; font-variant-numeric:tabular-nums; font-weight:600; }
+  .wt .section-row { background:var(--brand-05); font-weight:700; color:var(--g900); font-size:11px; }
+  .wt .section-row td { border-bottom:2px solid var(--brand-20); }
+  .wt .sub-section td { font-weight:700; color:var(--g600); background:var(--g50); }
+
+  /* View panels */
+  .view { display:none; }
+  .view.active { display:block; }
+
+  /* Funnel */
+  .funnel-step { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+  .funnel-label { width:45%; text-align:right; font-size:11px; color:var(--g500); line-height:1.2; }
+  .funnel-bar-wrap { width:35%; }
+  .funnel-bar { height:22px; border-radius:3px; transition:width 0.4s; display:flex; align-items:center; justify-content:flex-end; padding-right:6px; min-width:4px; }
+  .funnel-val { width:15%; font-size:13px; font-weight:800; }
+  .funnel-val.z { color:var(--g300); }
+
+  /* Accordion */
+  .accordion-hd { cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between; }
+  .accordion-hd:hover { background:var(--g50); }
+  .accordion-icon { font-size:10px; color:var(--g400); transition:transform 0.2s; flex-shrink:0; margin-left:12px; }
+  .accordion-hd.collapsed .accordion-icon { transform:rotate(-90deg); }
+  .accordion-body { transition:max-height 0.3s ease, opacity 0.2s ease; overflow:hidden; }
+  .accordion-body.collapsed { max-height:0 !important; opacity:0; padding-top:0 !important; padding-bottom:0 !important; }
+
+  .loading { display:flex; align-items:center; justify-content:center; padding:60px; color:var(--g400); font-size:12px; }
+  .spinner { width:14px; height:14px; border:2px solid var(--g200); border-top-color:var(--brand); border-radius:50%; animation:spin 0.5s linear infinite; margin-right:8px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .footer { text-align:center; padding:24px 0 8px; font-size:10px; color:var(--g400); }
+  .footer a { color:var(--brand); text-decoration:none; font-weight:600; }
+
+  @media (max-width:900px) { .sboard,.exec-grid { grid-template-columns:repeat(2,1fr); } .g2,.g3 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-left">
+      <img src="data:image/png;base64,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" alt="lumif.ai" style="width:30px;height:30px;border-radius:7px;">
+      <div><div class="hdr-title">Satguru South Africa Dashboard</div><div class="hdr-sub">Outreach Analytics | Powered by lumif.ai</div></div>
+    </div>
+    <div class="hdr-right">
+      <div class="week-pill" id="weekBadge">Week 1</div>
+      <div class="hdr-meta"><div>Campaign: <span id="campDate">--</span></div><div>Updated: <span id="updDate">--</span></div></div>
+    </div>
+  </div>
+
+  <!-- NAV TABS -->
+  <div class="nav">
+    <div class="nav-tab active" data-view="exec">Executive View</div>
+    <div class="nav-tab" data-view="detail">Detailed View</div>
+    <div class="nav-tab" data-view="tracker">Weekly Tracker</div>
+  </div>
+
+  <!-- FILTER BAR (shared) -->
+  <div class="fbar">
+    <span class="fbar-label">Filters</span>
+    <select class="fsel" id="fSender"><option value="">All Senders</option></select>
+    <select class="fsel" id="fChannel"><option value="">All Channels</option></select>
+    <select class="fsel" id="fVersion"><option value="">All Versions</option></select>
+    <div class="fsep"></div>
+    <span class="fcount" id="fCount">--</span>
+    <button class="freset" id="fReset" style="display:none;">Reset</button>
+  </div>
+
+  <div class="loading" id="loader"><div class="spinner"></div>Loading data from Google Sheet...</div>
+
+  <!-- ============================================================ -->
+  <!-- EXECUTIVE VIEW -->
+  <!-- ============================================================ -->
+  <div class="view active" id="v-exec">
+
+    <div class="sboard" style="grid-template-columns:repeat(6,1fr);">
+      <div class="sc primary"><div class="sc-v" id="exLeads">--</div><div class="sc-l">Leads</div></div>
+      <div class="sc"><div class="sc-v" id="exCos">--</div><div class="sc-l">Companies</div></div>
+      <div class="sc"><div class="sc-v" id="exEmailS">--</div><div class="sc-l">Emails (Unique / Total)</div></div>
+      <div class="sc"><div class="sc-v" id="exLiS">--</div><div class="sc-l">LI Requests Sent</div></div>
+      <div class="sc primary"><div class="sc-v" id="exReply">0</div><div class="sc-l">Replies</div></div>
+      <div class="sc primary"><div class="sc-v" id="exMeet">0</div><div class="sc-l">Meetings Booked</div></div>
+    </div>
+
+    <div class="exec-grid" id="exGrid">
+      <!-- Email Funnel -->
+      <div class="exec-card">
+        <div class="exec-card-title">Email Funnel</div>
+        <div id="exEmailFunnel"></div>
+      </div>
+      <!-- LinkedIn Funnel -->
+      <div class="exec-card">
+        <div class="exec-card-title">LinkedIn Funnel</div>
+        <div id="exLiFunnel"></div>
+      </div>
+      <!-- A/B card -->
+      <div class="exec-card">
+        <div class="exec-card-title">A/B Message Performance</div>
+        <div id="exAB"></div>
+      </div>
+    </div>
+
+    <div class="exec-note">
+      <div class="exec-note-title">What to Expect</div>
+      <div class="exec-note-text" id="exNote"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- DETAILED VIEW -->
+  <!-- ============================================================ -->
+  <div class="view" id="v-detail">
+
+    <div class="sboard" style="grid-template-columns:repeat(6,1fr);">
+      <div class="sc primary"><div class="sc-v" id="d_leads">--</div><div class="sc-l">Leads</div></div>
+      <div class="sc"><div class="sc-v" id="d_cos">--</div><div class="sc-l">Companies</div></div>
+      <div class="sc"><div class="sc-v" id="d_email">--</div><div class="sc-l">Emails Sent</div></div>
+      <div class="sc"><div class="sc-v" id="d_li">--</div><div class="sc-l">LI Requests</div></div>
+      <div class="sc primary"><div class="sc-v" id="d_reply">--</div><div class="sc-l">Replies</div></div>
+      <div class="sc primary"><div class="sc-v" id="d_meet">--</div><div class="sc-l">Meetings</div></div>
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="card-hd"><div class="card-t">Email Funnel</div><div class="card-s">From total leads through to email replies</div></div>
+        <div class="card-bd">
+          <div class="chart-w"><canvas id="chPipeEmail"></canvas></div>
+          <ul class="ml" id="d_mE" style="margin-top:12px;border-top:1px solid var(--g100);padding-top:10px;"></ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-t">LinkedIn Funnel</div><div class="card-s">From total leads through to LinkedIn replies</div></div>
+        <div class="card-bd">
+          <div class="chart-w"><canvas id="chPipeLi"></canvas></div>
+          <ul class="ml" id="d_mL" style="margin-top:12px;border-top:1px solid var(--g100);padding-top:10px;"></ul>
+        </div>
+        <div class="bench"><span class="bdot"></span>Prior benchmark: 16.7% LinkedIn acceptance rate</div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="card-hd"><div class="card-t">A/B Message Testing</div><div class="card-s">Version A vs Version B (aggregated across senders)</div></div>
+        <div class="card-bd" id="d_ab"></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-t">Sender Comparison</div><div class="card-s">Engagement by sender persona</div></div>
+        <div class="card-bd"><div class="chart-w"><canvas id="chSender"></canvas></div></div>
+        <div class="bench"><span class="bdot"></span>Prior: Renier 19.1% | Samihah 16.9% LI acceptance</div>
+      </div>
+    </div>
+
+    <div class="card mb16">
+      <div class="card-hd"><div class="card-t">Channel Strategy Breakdown</div><div class="card-s">Hybrid vs single-channel</div></div>
+      <div style="padding:0;">
+        <table class="dt"><thead><tr><th>Strategy</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">Delivered</th><th class="r">LI Sent</th><th class="r">Accepted</th><th class="r">Replies</th></tr></thead><tbody id="d_chTb"></tbody></table>
+      </div>
+    </div>
+
+    <div class="card mb16">
+      <div class="card-hd"><div class="card-t">Company Coverage</div><div class="card-s" id="d_coSub">--</div></div>
+      <div class="card-bd" style="padding:10px 18px;">
+        <div id="d_coBars"></div>
+        <div class="co-lg"><div class="co-li"><div class="co-ld" style="background:var(--brand);"></div>Email</div><div class="co-li"><div class="co-ld" style="background:var(--g300);"></div>LinkedIn</div><div class="co-li"><div class="co-ld" style="background:var(--g100);"></div>Queued</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- WEEKLY TRACKER VIEW -->
+  <!-- ============================================================ -->
+  <div class="view" id="v-tracker">
+
+    <!-- Summary cards matching the tracker header row -->
+    <div class="sboard" style="grid-template-columns:repeat(7,1fr);margin-bottom:20px;">
+      <div class="sc"><div class="sc-v" id="wt_cos">--</div><div class="sc-l">Companies Sourced</div></div>
+      <div class="sc"><div class="sc-v" id="wt_leads">--</div><div class="sc-l">Leads Generated</div></div>
+      <div class="sc"><div class="sc-v" id="wt_outreached">--</div><div class="sc-l">Leads Outreached</div></div>
+      <div class="sc"><div class="sc-v" id="wt_liMsg">--</div><div class="sc-l">LinkedIn Msgs Sent</div></div>
+      <div class="sc"><div class="sc-v" id="wt_emailSent">--</div><div class="sc-l">Emails Sent</div></div>
+      <div class="sc"><div class="sc-v" id="wt_phone">--</div><div class="sc-l">Phone Nos. Enriched</div></div>
+      <div class="sc primary"><div class="sc-v" id="wt_qualResp">--</div><div class="sc-l">Qualified Responses</div></div>
+    </div>
+
+    <!-- Overall Pipeline WoW -->
+    <div class="card mb16">
+      <div class="card-hd accordion-hd" data-target="wtOverallBody">
+        <div>
+          <div class="card-t">Overall Outreach Pipeline - WoW</div>
+          <div class="card-s">Week-over-week tracking across all channels</div>
+        </div>
+        <div class="accordion-icon">&#9660;</div>
+      </div>
+      <div id="wtOverallBody" class="accordion-body" style="padding:0;overflow-x:auto;">
+        <table class="wt" id="wtOverall"></table>
+      </div>
+    </div>
+
+    <!-- Strategy 1: Pharmaceuticals -->
+    <div class="card mb16">
+      <div class="card-hd accordion-hd" data-target="wtS1Body">
+        <div>
+          <div class="card-t">Strategy 1: Pharmaceuticals Industry</div>
+          <div class="card-s">JHB, CPT, DUR, PTA | 10+ employees | Pharma, Med, Bio, Lifesciences, Wholesalers, Outsourced Services</div>
+        </div>
+        <div class="accordion-icon">&#9660;</div>
+      </div>
+      <div id="wtS1Body" class="accordion-body" style="padding:0;overflow-x:auto;">
+        <table class="wt" id="wtS1"></table>
+      </div>
+    </div>
+
+    <!-- Strategy 2: Embassies & Consulates -->
+    <div class="card mb16">
+      <div class="card-hd accordion-hd" data-target="wtS2Body">
+        <div>
+          <div class="card-t">Strategy 2: Embassies & Consulates</div>
+          <div class="card-s">Pretoria (primary), CPT, JHB | Dir General, Deputy Head, Ambassador PA</div>
+        </div>
+        <div class="accordion-icon">&#9660;</div>
+      </div>
+      <div id="wtS2Body" class="accordion-body" style="padding:0;overflow-x:auto;">
+        <table class="wt" id="wtS2"></table>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">Powered by <a href="https://lumif.ai">lumif.ai</a> | Data refreshes on page load</div>
+</div>
+
+<script>
+const GSHEET_ID='1Tm2r2PlI14uLcJ5ghsQgHG2b9o9hVzNB152WbV-JtsA';
+const SHEET_NAME='Lead Summary';
+
+// === NORMALIZATION ===
+function normVer(seq){if(!seq)return'N/A';const m=seq.match(/version[_\s]?([a-z0-9]+)/i);return m?m[1].toUpperCase():'N/A';}
+function normSender(s){if(!s)return'Team';const l=s.toLowerCase();if(l.includes('renier'))return'Renier';if(l.includes('samihah')||l.includes('samhiah'))return'Samihah';if(l.includes('shaunelle'))return'Shaunelle';return'Team';}
+function normChannel(s){if(!s)return'Hybrid';const l=s.toLowerCase();if(l.includes('email_only')||l.includes('email only'))return'Email Only';if(l.includes('linkedin'))return'LinkedIn Only';return'Hybrid';}
+
+// === CSV ===
+function parseCSV(t){const L=[];let r=[],f='',q=false;for(let i=0;i<t.length;i++){const c=t[i];if(c==='"'){if(q&&t[i+1]==='"'){f+='"';i++}else q=!q}else if(c===','&&!q){r.push(f);f=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&t[i+1]==='\n')i++;r.push(f);f='';if(r.length>1)L.push(r);r=[]}else f+=c}if(f||r.length){r.push(f);if(r.length>1)L.push(r)}const h=L[0];return L.slice(1).map(r=>{const o={};h.forEach((k,j)=>{o[k.trim()]=(r[j]||'').trim()});return o})}
+
+const N=v=>{const x=parseFloat(v);return isNaN(x)?0:x};
+const S=(a,f)=>a.reduce((s,r)=>s+N(r[f]),0);
+const U=(a,f)=>new Set(a.map(r=>r[f]).filter(Boolean)).size;
+const UV=(a,f)=>[...new Set(a.map(r=>r[f]).filter(Boolean))].sort();
+const G=(a,f)=>{const m={};a.forEach(r=>{const k=r[f]||'Unknown';(m[k]=m[k]||[]).push(r)});return m};
+
+function mli(items){return items.map(([k,v])=>{const z=v===0||v==='--'?' z':'';const h=typeof v==='string'&&v.includes('%')&&v!=='--'?' hl':'';return`<li class="mi"><span class="mk">${k}</span><span class="mv${z}${h}">${typeof v==='number'?v.toLocaleString():v}</span></li>`}).join('')}
+
+// === STATE ===
+let ALL=[],FLT=[];
+let charts=[];
+const NUM=['Email Sent','Email Delivered','Email Bounced','Email Failed','Email Replies','LI Connection Actions','LI Connections Sent','LI Messages Sent','Pushed to Aimfox','Aimfox Conn Sent','Aimfox Accepted','Aimfox Replies','Total Touches','Total Replies'];
+const FM={fSender:'sender',fChannel:'channel',fVersion:'version'};
+
+// === TABS ===
+document.querySelectorAll('.nav-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('v-'+tab.dataset.view).classList.add('active');
+  });
+});
+
+// === FILTERS ===
+function popFilters(){Object.entries(FM).forEach(([id,f])=>{const sel=document.getElementById(id);const cur=sel.value;const vs=UV(ALL,f);const lb={fSender:'Senders',fChannel:'Channels',fVersion:'Versions'}[id];sel.innerHTML=`<option value="">All ${lb}</option>`+vs.map(v=>`<option value="${v}"${v===cur?' selected':''}>${v}</option>`).join('')})}
+function applyF(){FLT=ALL.filter(r=>Object.entries(FM).every(([id,f])=>{const v=document.getElementById(id).value;return!v||r[f]===v}));const ac=Object.keys(FM).filter(id=>document.getElementById(id).value).length;document.getElementById('fCount').textContent=ac>0?`${FLT.length} of ${ALL.length} leads`:`${ALL.length} leads`;document.getElementById('fReset').style.display=ac>0?'':'none';render()}
+function resetF(){Object.keys(FM).forEach(id=>{document.getElementById(id).value=''});applyF()}
+Object.keys(FM).forEach(id=>document.getElementById(id).addEventListener('change',applyF));
+document.getElementById('fReset').addEventListener('click',resetF);
+
+// === RENDER ===
+function render(){
+  charts.forEach(c=>c.destroy());charts=[];
+  const D=FLT;
+  // Email metrics
+  const eUniq=D.filter(r=>N(r['Email Sent'])>0).length; // unique leads emailed
+  const eS=S(D,'Email Sent'); // total emails (incl multi-touch)
+  const eD=S(D,'Email Delivered'),eB=S(D,'Email Bounced'),eF=S(D,'Email Failed'),eR=S(D,'Email Replies');
+  const eSendsPerLead=eUniq>0?(eS/eUniq).toFixed(1):'--';
+  // LinkedIn funnel
+  const lActions=S(D,'LI Connection Actions'); // scheduled actions (the plan)
+  const lS=S(D,'LI Connections Sent'); // sent at step level
+  const lP=S(D,'Pushed to Aimfox'); // pushed to automation
+  const aS=S(D,'Aimfox Conn Sent'); // automation confirmed sent
+  const aA=S(D,'Aimfox Accepted'); // accepted
+  const lM=S(D,'LI Messages Sent'); // DMs sent after acceptance
+  const aR=S(D,'Aimfox Replies'); // replies via LinkedIn
+  const lUniq=D.filter(r=>N(r['LI Connections Sent'])>0).length; // unique leads with LI sent
+  // Totals
+  const tR=S(D,'Total Replies');
+  const meets=D.filter(r=>r['Conversation Stage']==='meeting_booked').length;
+
+  // === EXECUTIVE VIEW ===
+  document.getElementById('exLeads').textContent=D.length.toLocaleString();
+  document.getElementById('exCos').textContent=U(D,'Company Name').toLocaleString();
+  document.getElementById('exReply').textContent=tR.toLocaleString();
+  document.getElementById('exMeet').textContent=meets.toLocaleString();
+  document.getElementById('exEmailS').textContent=eUniq+' / '+eS;
+  document.getElementById('exLiS').textContent=lS.toLocaleString();
+
+  // Build funnel HTML helper
+  function buildFunnel(steps,maxVal){
+    let h='';
+    steps.forEach((step,i)=>{
+      const pct=maxVal>0?Math.max(6,Math.round((step.value/maxVal)*100)):6;
+      const opacity=Math.max(0.2,1-(i*0.15));
+      const isZ=step.value===0;
+      const pctOfTotal=maxVal>0?(step.value/maxVal*100).toFixed(0)+'%':'--';
+      h+=`<div class="funnel-step">
+        <div class="funnel-label">${step.label}</div>
+        <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:${isZ?'var(--g200)':'rgba(233,77,53,'+opacity+')'};"></div></div>
+        <div class="funnel-val${isZ?' z':''}">${step.value.toLocaleString()}</div>
+        <div style="width:10%;font-size:10px;color:var(--g400);font-weight:500;">${i>0?pctOfTotal:''}</div>
+      </div>`;
+    });
+    return h;
+  }
+
+  // Email funnel
+  const emailFunnel=[
+    {label:'Total Leads',value:D.length},
+    {label:'Unique Leads Emailed',value:eUniq},
+    {label:'Total Emails Sent',value:eS},
+    {label:'Emails Delivered',value:eD},
+    {label:'Email Replies',value:eR},
+  ];
+  document.getElementById('exEmailFunnel').innerHTML=buildFunnel(emailFunnel,D.length);
+
+  // LinkedIn funnel
+  const liFunnel=[
+    {label:'Total Leads',value:D.length},
+    {label:'Conn. Requests Sent',value:lS},
+    {label:'Connections Accepted',value:aA},
+    {label:'DMs Sent',value:lM},
+    {label:'LinkedIn Replies',value:aR},
+  ];
+  document.getElementById('exLiFunnel').innerHTML=buildFunnel(liFunnel,D.length);
+
+  // A/B
+  const vG=G(D,'version');
+  const vA=vG['A']||[],vB=vG['B']||[];
+  let abH='';
+  if(vA.length||vB.length){
+    [['A',vA],['B',vB]].forEach(([l,rows])=>{
+      const rep=S(rows,'Total Replies');
+      abH+=`<div class="exec-stat"><span class="exec-stat-k">Version ${l}</span><span class="exec-stat-v">${rows.length} leads</span></div>`;
+      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">Emails sent / delivered</span><span class="exec-stat-v" style="font-size:12px;">${S(rows,'Email Sent')} / ${S(rows,'Email Delivered')}</span></div>`;
+      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">Replies</span><span class="exec-stat-v${rep>0?' hl':' z'}" style="font-size:12px;">${rep}</span></div>`;
+    });
+  } else { abH='<div style="color:var(--g400);font-size:12px;">No A/B test data in current filter</div>'; }
+  document.getElementById('exAB').innerHTML=abH;
+
+  // Expectations
+  const daysLive=Math.max(1,Math.round((Date.now()-new Date(ALL[0]?.['Campaign Started']||Date.now()).getTime())/(86400000)));
+  document.getElementById('exNote').innerHTML=`Campaign is <strong>${daysLive} day${daysLive>1?'s':''}</strong> old. Based on prior campaigns with this team:<br>
+    &bull; LinkedIn acceptance rate averaged <strong>16.7%</strong> (Renier 19.1%, Samihah 16.9%)<br>
+    &bull; Most email replies came after the <strong>2nd or 3rd message</strong> in the sequence<br>
+    &bull; <strong>${D.filter(r=>r['Conversation Stage']==='contact_scheduled').length}</strong> leads still have scheduled touches that haven't fired yet`;
+
+  // === DETAILED VIEW ===
+  document.getElementById('d_leads').textContent=D.length.toLocaleString();
+  document.getElementById('d_cos').textContent=U(D,'Company Name').toLocaleString();
+  document.getElementById('d_email').textContent=eS.toLocaleString();
+  document.getElementById('d_li').textContent=lS.toLocaleString();
+  document.getElementById('d_reply').textContent=tR.toLocaleString();
+  document.getElementById('d_meet').textContent=meets.toLocaleString();
+
+  // Email Funnel Chart (detailed view)
+  function funnelChart(canvasId,steps){
+    const mx=steps[0].value||1;
+    charts.push(new Chart(document.getElementById(canvasId),{
+      type:'bar',
+      data:{
+        labels:steps.map(s=>s.label),
+        datasets:[{data:steps.map(s=>s.value),backgroundColor:steps.map((_,i)=>`rgba(233,77,53,${Math.max(0.15,1-i*0.18)})`),borderRadius:4,barPercentage:0.65}]
+      },
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{
+          const pct=mx>0?(ctx.raw/mx*100).toFixed(1)+'%':'--';
+          return `${ctx.raw.toLocaleString()} (${pct} of total)`;
+        }}}},
+        scales:{x:{display:false},y:{grid:{display:false},ticks:{font:{family:'Inter',size:11,weight:'500'},color:'#475569'}}}
+      }
+    }));
+  }
+  funnelChart('chPipeEmail',[
+    {label:'Total Leads',value:D.length},
+    {label:'Unique Leads Emailed',value:eUniq},
+    {label:'Total Emails Sent',value:eS},
+    {label:'Emails Delivered',value:eD},
+    {label:'Email Replies',value:eR},
+  ]);
+  funnelChart('chPipeLi',[
+    {label:'Total Leads',value:D.length},
+    {label:'Conn. Requests Sent',value:lS},
+    {label:'Confirmed Sent (Aimfox)',value:aS},
+    {label:'Connections Accepted',value:aA},
+    {label:'DMs Sent',value:lM},
+    {label:'LinkedIn Replies',value:aR},
+  ]);
+
+  // Channel metrics
+  const dR=eS>0?(eD/eS*100).toFixed(1)+'%':'--';
+  const aR2=lS>0?(aA/lS*100).toFixed(1)+'%':'--';
+  // Supplementary metrics below the funnel charts
+  document.getElementById('d_mE').innerHTML=mli([
+    ['Sends per Prospect',eSendsPerLead],
+    ['Delivery Rate',dR],
+    ['Bounced',eB],
+    ['Failed',eF],
+    ['Reply Rate',eS>0?(eR/eS*100).toFixed(1)+'%':'--'],
+  ]);
+  document.getElementById('d_mL').innerHTML=mli([
+    ['Actions Scheduled',lActions],
+    ['Pushed to Aimfox',lP],
+    ['Accept Rate',lS>0?(aA/lS*100).toFixed(1)+'%':'--'],
+    ['Reply Rate',lS>0?(aR/lS*100).toFixed(1)+'%':'--'],
+  ]);
+
+  // A/B detail
+  let abD='<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">';
+  [['A',vA],['B',vB]].forEach(([l,rows])=>{
+    abD+=`<div style="padding:0 14px 10px;${l==='B'?'border-left:1px solid var(--g100);':''}">
+      <div style="font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;margin-bottom:8px;">Version ${l}</div>
+      <div style="font-size:20px;font-weight:800;">${rows.length} <span style="font-size:11px;font-weight:500;color:var(--g400);">leads</span></div>
+      <ul class="ml" style="margin-top:8px;">${mli([['Email Sent',S(rows,'Email Sent')],['Delivered',S(rows,'Email Delivered')],['LI Sent',S(rows,'LI Connections Sent')],['Accepted',S(rows,'Aimfox Accepted')],['Replies',S(rows,'Total Replies')]])}</ul>
+    </div>`;
+  });
+  abD+='</div>';
+  document.getElementById('d_ab').innerHTML=abD;
+
+  // Sender chart
+  const sG=G(D,'sender');const sN=Object.keys(sG).sort();
+  charts.push(new Chart(document.getElementById('chSender'),{type:'bar',data:{labels:sN.map(s=>`${s} (${sG[s].length})`),datasets:[
+    {label:'Email Sent',data:sN.map(s=>S(sG[s],'Email Sent')),backgroundColor:'rgba(233,77,53,0.7)',borderRadius:4},
+    {label:'Delivered',data:sN.map(s=>S(sG[s],'Email Delivered')),backgroundColor:'rgba(233,77,53,0.35)',borderRadius:4},
+    {label:'LI Sent',data:sN.map(s=>S(sG[s],'LI Connections Sent')),backgroundColor:'rgba(148,163,184,0.5)',borderRadius:4},
+    {label:'Replies',data:sN.map(s=>S(sG[s],'Total Replies')),backgroundColor:'rgba(233,77,53,1)',borderRadius:4},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{usePointStyle:true,pointStyle:'rectRounded',font:{family:'Inter',size:10},padding:10}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:10}}},y:{grid:{color:'#F1F5F9'},beginAtZero:true,ticks:{font:{size:9}}}}}}));
+
+  // Channel table
+  const chG=G(D,'channel');
+  document.getElementById('d_chTb').innerHTML=['Hybrid','Email Only','LinkedIn Only'].filter(c=>chG[c]).map(c=>{const r=chG[c];return`<tr><td class="nm">${c}</td><td class="r">${r.length}</td><td class="r">${S(r,'Email Sent')}</td><td class="r">${S(r,'Email Delivered')}</td><td class="r">${S(r,'LI Connections Sent')}</td><td class="r">${S(r,'Aimfox Accepted')}</td><td class="r" style="font-weight:700;">${S(r,'Total Replies')}</td></tr>`}).join('');
+
+  // Company bars
+  const coG=G(D,'Company Name');
+  const coA=Object.entries(coG).map(([n,r])=>({name:n,leads:r.length,email:S(r,'Email Sent'),li:S(r,'LI Connections Sent')})).sort((a,b)=>b.leads-a.leads).slice(0,15);
+  const mxL=coA[0]?.leads||1;
+  document.getElementById('d_coSub').textContent=`Top 15 of ${U(D,'Company Name')} companies`;
+  document.getElementById('d_coBars').innerHTML=coA.map((c,i)=>{const eW=(c.email/mxL)*100,lW=(c.li/mxL)*100,rest=Math.max(0,c.leads-c.email-c.li),rW=(rest/mxL)*100;return`<div class="co"><span class="co-r">${i+1}</span><span class="co-n" title="${c.name}">${c.name}</span><div class="co-bw">${c.email>0?`<div class="co-b" style="width:${eW}%;background:var(--brand);"></div>`:''}${c.li>0?`<div class="co-b" style="width:${lW}%;background:var(--g300);"></div>`:''}${rest>0?`<div class="co-b" style="width:${rW}%;background:var(--g100);"></div>`:''}</div><span class="co-c">${c.leads}</span></div>`}).join('');
+
+  // === WEEKLY TRACKER ===
+  renderTracker(D);
+}
+
+function renderTracker(D){
+  // Compute all metrics
+  const eS=S(D,'Email Sent'),eD=S(D,'Email Delivered'),eB=S(D,'Email Bounced'),eR=S(D,'Email Replies');
+  const lS=S(D,'LI Connections Sent'),lA=S(D,'Aimfox Accepted'),lMsgs=S(D,'LI Messages Sent'),lR=S(D,'Aimfox Replies');
+  const lPush=S(D,'Pushed to Aimfox'),afSent=S(D,'Aimfox Conn Sent');
+  const contacted=D.filter(r=>r['Conversation Stage']==='contacted').length;
+  const scheduled=D.filter(r=>r['Conversation Stage']==='contact_scheduled').length;
+  const tR=S(D,'Total Replies');
+  const emailLeads=D.filter(r=>N(r['Email Sent'])>0).length;
+  const liLeads=D.filter(r=>N(r['LI Connections Sent'])>0).length;
+  const vG=G(D,'version');
+  const vA=vG['A']||[],vB=vG['B']||[];
+
+  // Summary cards
+  document.getElementById('wt_cos').textContent=U(D,'Company Name').toLocaleString();
+  document.getElementById('wt_leads').textContent=D.length.toLocaleString();
+  document.getElementById('wt_outreached').textContent=contacted.toLocaleString();
+  document.getElementById('wt_liMsg').textContent=lMsgs.toLocaleString();
+  document.getElementById('wt_emailSent').textContent=eS.toLocaleString();
+  document.getElementById('wt_phone').textContent='--';
+  document.getElementById('wt_qualResp').textContent=tR.toLocaleString();
+
+  // WoW table builder - matches the xlsx format exactly
+  // Columns: METRIC | Total | WK1 | WK2 ... WK12
+  const WK_COLS=12;
+  function thRow(){
+    let h='<thead><tr><th style="min-width:200px;">METRIC</th><th class="r">Total</th>';
+    for(let i=1;i<=WK_COLS;i++) h+=`<th class="r" style="min-width:55px;">WK${i}</th>`;
+    h+='</tr></thead>';return h;
+  }
+  function secRow(label,colspan){return `<tr class="section-row"><td colspan="${colspan||WK_COLS+2}">${label}</td></tr>`;}
+  function dataRow(metric,total,wk1Val){
+    const t=typeof total==='number'?total.toLocaleString():total;
+    const w1=wk1Val!==undefined?(typeof wk1Val==='number'?wk1Val.toLocaleString():wk1Val):(typeof total==='number'?total.toLocaleString():total);
+    let r=`<tr><td>${metric}</td><td class="r">${t}</td><td class="r">${w1}</td>`;
+    for(let i=2;i<=WK_COLS;i++) r+='<td class="r" style="color:var(--g300);">--</td>';
+    r+='</tr>';return r;
+  }
+  function pctRow(metric,num,den){
+    const pct=den>0?(num/den*100).toFixed(1)+'%':'--';
+    return dataRow(metric,pct,pct);
+  }
+
+  // === OVERALL PIPELINE ===
+  let overall=thRow()+'<tbody>';
+  overall+=dataRow('Total Companies Sourced',U(D,'Company Name'));
+  overall+=dataRow('Total Leads Generated',D.length);
+  overall+=dataRow('Total Leads Outreached',contacted);
+  overall+=dataRow('Phone Nos. Enriched','--','--');
+  overall+=secRow('EMAIL');
+  overall+=dataRow('UNIQUE LEADS EMAILED',emailLeads);
+  overall+=dataRow('TOTAL EMAILS SENT',eS);
+  overall+=dataRow('SENDS PER PROSPECT',eS>0&&emailLeads>0?(eS/emailLeads).toFixed(1):'--');
+  overall+=dataRow('MESSAGE SCHEDULED',scheduled);
+  overall+=dataRow('EMAILS DELIVERED',eD);
+  overall+=pctRow('Delivery Rate %',eD,eS);
+  overall+=pctRow('Bounce Rate %',eB,eS);
+  overall+=dataRow('TOTAL RESPONSE',eR);
+  overall+=dataRow('QUALIFIED RESPONSE',eR);
+  overall+=pctRow('Reply Rate %',eR,eS);
+  overall+=dataRow('Version A Replies',S(vA,'Email Replies'));
+  overall+=dataRow('Version B Replies',S(vB,'Email Replies'));
+  overall+=secRow('LINKEDIN');
+  overall+=dataRow('UNIQUE LEADS TARGETED',liLeads);
+  overall+=dataRow('CONN. ACTIONS SCHEDULED',S(D,'LI Connection Actions'));
+  overall+=dataRow('CONNECTION REQUESTS SENT',lS);
+  overall+=dataRow('PUSHED TO AIMFOX',lPush);
+  overall+=dataRow('CONFIRMED SENT (AIMFOX)',afSent);
+  overall+=dataRow('CONNECTIONS ACCEPTED',lA);
+  overall+=pctRow('Acceptance Rate %',lA,lS);
+  overall+=dataRow('DMs SENT (POST-ACCEPT)',lMsgs);
+  overall+=dataRow('TOTAL RESPONSE',lR);
+  overall+=dataRow('QUALIFIED RESPONSE',lR);
+  overall+=pctRow('Reply Rate %',lR,lS);
+  overall+=dataRow('Version A Replies',S(vA,'Aimfox Replies'));
+  overall+=dataRow('Version B Replies',S(vB,'Aimfox Replies'));
+  overall+='</tbody>';
+  document.getElementById('wtOverall').innerHTML=overall;
+
+  // === STRATEGY 1: PHARMACEUTICALS ===
+  // All current data is Pharma (except the 3 Travel leads)
+  const pharmaD=D.filter(r=>{const s=(r['Sequence Name']||'').toLowerCase();return !s.includes('global travel')&&!s.includes('satguru travel');});
+  const pES=S(pharmaD,'Email Sent'),pED=S(pharmaD,'Email Delivered'),pEB=S(pharmaD,'Email Bounced'),pER=S(pharmaD,'Email Replies');
+  const pLS=S(pharmaD,'LI Connections Sent'),pLA=S(pharmaD,'Aimfox Accepted'),pLM=S(pharmaD,'LI Messages Sent'),pLR=S(pharmaD,'Aimfox Replies');
+  const pLPush=S(pharmaD,'Pushed to Aimfox'),pAfSent=S(pharmaD,'Aimfox Conn Sent');
+  const pContacted=pharmaD.filter(r=>r['Conversation Stage']==='contacted').length;
+  const pScheduled=pharmaD.filter(r=>r['Conversation Stage']==='contact_scheduled').length;
+  const pEmailLeads=pharmaD.filter(r=>N(r['Email Sent'])>0).length;
+  const pLiLeads=pharmaD.filter(r=>N(r['LI Connections Sent'])>0).length;
+  const pVA=pharmaD.filter(r=>r.version==='A'),pVB=pharmaD.filter(r=>r.version==='B');
+  const pMeetings=pharmaD.filter(r=>r['Conversation Stage']==='meeting_booked').length;
+
+  let s1=thRow()+'<tbody>';
+  s1+=dataRow('# Companies Sourced',U(pharmaD,'Company Name'));
+  s1+=dataRow('# Leads Generated',pharmaD.length);
+  s1+=dataRow('# Warm Leads Generated','--','--');
+  s1+=dataRow('# Phone Nos. Enriched','--','--');
+  s1+=secRow('EMAILS');
+  s1+=dataRow('# Unique Leads Emailed',pEmailLeads);
+  s1+=dataRow('# Total Emails Sent',pES);
+  s1+=dataRow('Sends per Prospect',pEmailLeads>0?(pES/pEmailLeads).toFixed(1):'--');
+  s1+=dataRow('# Emails Scheduled',pScheduled);
+  s1+=dataRow('# Emails Delivered',pED);
+  s1+=pctRow('Delivery Rate %',pED,pES);
+  s1+=pctRow('Bounce Rate %',pEB,pES);
+  s1+=pctRow('Reply Rate %',pER,pES);
+  s1+=dataRow('Positive Replies',pER);
+  s1+=dataRow('Meetings Booked via Email',pMeetings);
+  s1+=secRow('LINKEDIN');
+  s1+=dataRow('# Unique Leads Targeted',pLiLeads);
+  s1+=dataRow('# Conn. Actions Scheduled',S(pharmaD,'LI Connection Actions'));
+  s1+=dataRow('# Connection Requests Sent',pLS);
+  s1+=dataRow('# Pushed to Aimfox',pLPush);
+  s1+=dataRow('# Confirmed Sent (Aimfox)',pAfSent);
+  s1+=dataRow('# Connections Accepted',pLA);
+  s1+=pctRow('Acceptance Rate %',pLA,pLS);
+  s1+=dataRow('# DMs Sent (post-accept)',pLM);
+  s1+=pctRow('Reply Rate %',pLR,pLS);
+  s1+=dataRow('Positive Replies',pLR);
+  s1+=dataRow('Meetings Booked via LinkedIn',0);
+  s1+=`<tr class="section-row"><td colspan="${WK_COLS+2}">TOTAL</td></tr>`;
+  s1+=dataRow('Total Meetings Booked',pMeetings);
+  s1+='</tbody>';
+  document.getElementById('wtS1').innerHTML=s1;
+
+  // === STRATEGY 2: EMBASSIES ===
+  // No embassy data yet in current dataset
+  let s2=thRow()+'<tbody>';
+  const emptyMetrics=['# Companies Sourced','# Leads Generated','# Warm Leads Generated','# Phone Nos. Enriched'];
+  emptyMetrics.forEach(m=>{ s2+=dataRow(m,'--','--'); });
+  s2+=secRow('EMAILS');
+  ['# Emails Sent','# Emails Scheduled','# Email Recipients Sent','Reply Rate %','Bounce Rate %','Positive Replies','Meetings Booked via Email'].forEach(m=>{ s2+=dataRow(m,'--','--'); });
+  s2+=secRow('LINKEDIN');
+  ['# Connections Sent','# Connections Accepted','# Messages Sent','# Messages Scheduled','Reply Rate %','Positive Replies','Meetings Booked via LinkedIn'].forEach(m=>{ s2+=dataRow(m,'--','--'); });
+  s2+=`<tr class="section-row"><td colspan="${WK_COLS+2}">TOTAL</td></tr>`;
+  s2+=dataRow('Total Meetings Booked','--','--');
+  s2+='</tbody>';
+  document.getElementById('wtS2').innerHTML=s2;
+}
+
+// === ACCORDION ===
+document.querySelectorAll('.accordion-hd').forEach(hd=>{
+  hd.addEventListener('click',()=>{
+    const targetId=hd.dataset.target;
+    const body=document.getElementById(targetId);
+    const isCollapsed=hd.classList.toggle('collapsed');
+    if(isCollapsed){
+      body.style.maxHeight=body.scrollHeight+'px';
+      requestAnimationFrame(()=>{body.classList.add('collapsed')});
+    } else {
+      body.classList.remove('collapsed');
+      body.style.maxHeight=body.scrollHeight+'px';
+      setTimeout(()=>{body.style.maxHeight='none'},300);
+    }
+  });
+});
+
+// === INIT ===
+async function init(){
+  try{
+    const url=`https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+    const resp=await fetch(url);if(!resp.ok)throw new Error(`HTTP ${resp.status}`);
+    ALL=parseCSV(await resp.text());
+    ALL.forEach(r=>{NUM.forEach(f=>{if(r[f]!==undefined)r[f]=N(r[f])});r.version=normVer(r['Sequence Name']);r.sender=r['Sender']||normSender(r['Sequence Name']);r.channel=r['Channel Strategy']||normChannel(r['Sequence Name'])});
+    try{const dates=ALL.map(r=>r['Campaign Started']).filter(Boolean).sort();if(dates[0]){const d=new Date(dates[0]);document.getElementById('campDate').textContent=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});document.getElementById('weekBadge').textContent=`Week ${Math.max(1,Math.ceil((Date.now()-d.getTime())/(7*86400000)))}`}}catch(e){}
+    document.getElementById('updDate').textContent=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    popFilters();FLT=[...ALL];
+    document.getElementById('loader').style.display='none';
+    document.querySelectorAll('.view').forEach(v=>{v.style.display=''});
+    document.getElementById('v-exec').classList.add('active');
+    render();
+  }catch(err){document.getElementById('loader').innerHTML=`<div style="text-align:center;"><div style="font-weight:600;margin-bottom:6px;">Could not load data</div><div style="font-size:11px;color:var(--g400);">${err.message}</div></div>`}
+}
+init();
+</script>
+</body>
+</html>
