@@ -213,6 +213,14 @@
       <div class="sc primary"><div class="sc-v" id="exMeet">0</div><div class="sc-l">Meetings Booked</div></div>
     </div>
 
+    <!-- Lead Enrichment -->
+    <div class="card mb16">
+      <div class="card-hd"><div class="card-t">Lead Channel Coverage</div><div class="card-s">How many leads are reachable on each channel</div></div>
+      <div class="card-bd" style="padding:10px 18px;">
+        <div id="exEnrichment" style="display:flex;gap:12px;"></div>
+      </div>
+    </div>
+
     <div class="exec-grid" id="exGrid">
       <!-- Email Funnel -->
       <div class="exec-card">
@@ -473,6 +481,27 @@ function render(){
     });
     return h;
   }
+
+  // Lead enrichment breakdown
+  const hasEmail=D.filter(r=>r.channel==='Hybrid'||r.channel==='Email Only').length;
+  const hasLi=D.filter(r=>r.channel==='Hybrid'||r.channel==='LinkedIn Only').length;
+  const hasBoth=D.filter(r=>r.channel==='Hybrid').length;
+  const emailOnly=D.filter(r=>r.channel==='Email Only').length;
+  const liOnly=D.filter(r=>r.channel==='LinkedIn Only').length;
+  const total=D.length;
+
+  function enrichBar(label,count,color){
+    const pct=total>0?(count/total*100).toFixed(0):0;
+    return `<div style="flex:1;text-align:center;padding:12px 8px;background:var(--g50);border-radius:8px;">
+      <div style="font-size:22px;font-weight:800;color:${color};">${count}</div>
+      <div style="font-size:10px;color:var(--g400);font-weight:600;margin-top:2px;">${label}</div>
+      <div style="font-size:10px;color:var(--g400);">${pct}% of leads</div>
+    </div>`;
+  }
+  document.getElementById('exEnrichment').innerHTML=
+    enrichBar('Both Email + LinkedIn',hasBoth,'var(--g900)')+
+    enrichBar('Email Only',emailOnly,'var(--brand)')+
+    enrichBar('LinkedIn Only',liOnly,'var(--g600)');
 
   // Email funnel - starts from leads targeted via email (Hybrid + Email Only)
   const emailPool=D.filter(r=>r.channel==='Hybrid'||r.channel==='Email Only').length;
