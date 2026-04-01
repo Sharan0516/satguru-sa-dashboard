@@ -793,10 +793,11 @@ function renderTracker(D){
     h+='</tr></thead>';return h;
   }
   function secRow(label,colspan){return `<tr class="section-row"><td colspan="${colspan||WK_COLS+2}">${label}</td></tr>`;}
-  function dataRow(metric,total,wk1Val){
+  function dataRow(metric,total,wk1Val,tip){
     const t=typeof total==='number'?total.toLocaleString():total;
     const w1=wk1Val!==undefined?(typeof wk1Val==='number'?wk1Val.toLocaleString():wk1Val):(typeof total==='number'?total.toLocaleString():total);
-    let r=`<tr><td>${metric}</td><td class="r">${t}</td><td class="r">${w1}</td>`;
+    const tipHtml=tip?` <span style="cursor:help;color:var(--g400);font-size:9px;" title="${tip}">&#9432;</span>`:'';
+    let r=`<tr><td>${metric}${tipHtml}</td><td class="r">${t}</td><td class="r">${w1}</td>`;
     for(let i=2;i<=WK_COLS;i++) r+='<td class="r" style="color:var(--g300);">--</td>';
     r+='</tr>';return r;
   }
@@ -815,32 +816,32 @@ function renderTracker(D){
   const emailScheduled=D.filter(r=>r['Conversation Stage']==='contact_scheduled'&&(r.channel==='Hybrid'||r.channel==='Email Only')).length;
   const liScheduled=D.filter(r=>r['Conversation Stage']==='contact_scheduled'&&(r.channel==='Hybrid'||r.channel==='LinkedIn Only')).length;
   const connScheduled=D.filter(r=>r['Conversation Stage']==='connection_scheduled').length;
-  overall+=dataRow('UNIQUE LEADS EMAILED',emailLeads);
-  overall+=dataRow('TOTAL EMAILS SENT',eS);
-  overall+=dataRow('SENDS PER PROSPECT',eS>0&&emailLeads>0?(eS/emailLeads).toFixed(1):'--');
-  overall+=dataRow('EMAILS SCHEDULED (PENDING)',emailScheduled);
-  overall+=dataRow('EMAILS DELIVERED',eD);
+  overall+=dataRow('UNIQUE LEADS EMAILED',emailLeads,undefined,'Number of individual leads who received at least one email');
+  overall+=dataRow('TOTAL EMAILS SENT',eS,undefined,'Total email sends including follow-ups (same lead may receive multiple emails)');
+  overall+=dataRow('SENDS PER PROSPECT',eS>0&&emailLeads>0?(eS/emailLeads).toFixed(1):'--',undefined,'Average number of emails sent per lead');
+  overall+=dataRow('EMAILS SCHEDULED (PENDING)',emailScheduled,undefined,'Email-targeted leads whose emails have not been sent yet');
+  overall+=dataRow('EMAILS DELIVERED',eD,undefined,'Emails confirmed delivered to inbox by SendGrid');
   overall+=pctRow('Delivery Rate %',eD,eS);
-  overall+=dataRow('EMAILS BOUNCED',eB);
+  overall+=dataRow('EMAILS BOUNCED',eB,undefined,'Emails that failed to deliver (invalid address, full mailbox, etc.)');
   overall+=pctRow('Bounce Rate %',eB,eS);
-  overall+=dataRow('TOTAL RESPONSE',eR);
-  overall+=dataRow('QUALIFIED RESPONSE',eR);
+  overall+=dataRow('TOTAL RESPONSE',eR,undefined,'Inbound email replies from leads (excludes auto-replies and out-of-office)');
+  overall+=dataRow('QUALIFIED RESPONSE',eR,undefined,'Replies that indicate genuine interest or engagement');
   overall+=pctRow('Reply Rate %',eR,eS);
-  overall+=dataRow('Version A Replies',S(vA,'Email Replies'));
-  overall+=dataRow('Version B Replies',S(vB,'Email Replies'));
+  overall+=dataRow('Version A Replies',S(vA,'Email Replies'),undefined,'Email replies from leads receiving message version A');
+  overall+=dataRow('Version B Replies',S(vB,'Email Replies'),undefined,'Email replies from leads receiving message version B');
   overall+=secRow('LINKEDIN');
-  overall+=dataRow('UNIQUE LEADS TARGETED',liLeads);
-  overall+=dataRow('LINKEDIN SCHEDULED (PENDING)',liScheduled+connScheduled);
-  overall+=dataRow('CONNECTION REQUESTS SENT',lS);
+  overall+=dataRow('UNIQUE LEADS TARGETED',liLeads,undefined,'Number of individual leads assigned to LinkedIn sequences');
+  overall+=dataRow('LINKEDIN SCHEDULED (PENDING)',liScheduled+connScheduled,undefined,'Leads whose LinkedIn connection requests are queued but not yet sent');
+  overall+=dataRow('CONNECTION REQUESTS SENT',lS,undefined,'LinkedIn connection requests actually sent to leads');
   // Opens/clicks removed - not reliable
-  overall+=dataRow('CONNECTIONS ACCEPTED',lA);
+  overall+=dataRow('CONNECTIONS ACCEPTED',lA,undefined,'Leads who accepted the LinkedIn connection request');
   overall+=pctRow('Acceptance Rate %',lA,lS);
-  overall+=dataRow('DMs SENT (POST-ACCEPT)',lMsgs);
-  overall+=dataRow('TOTAL RESPONSE',lR);
-  overall+=dataRow('QUALIFIED RESPONSE',lR);
+  overall+=dataRow('DMs SENT',lMsgs,undefined,'Direct messages sent to leads after they accepted the connection');
+  overall+=dataRow('TOTAL RESPONSE',lR,undefined,'Inbound LinkedIn replies from leads');
+  overall+=dataRow('QUALIFIED RESPONSE',lR,undefined,'LinkedIn replies that indicate genuine interest or engagement');
   overall+=pctRow('Reply Rate %',lR,lS);
-  overall+=dataRow('Version A Replies',S(vA,'LI Replies'));
-  overall+=dataRow('Version B Replies',S(vB,'LI Replies'));
+  overall+=dataRow('Version A Replies',S(vA,'LI Replies'),undefined,'LinkedIn replies from leads receiving message version A');
+  overall+=dataRow('Version B Replies',S(vB,'LI Replies'),undefined,'LinkedIn replies from leads receiving message version B');
   overall+='</tbody>';
   document.getElementById('wtOverall').innerHTML=overall;
 
