@@ -927,7 +927,8 @@ async function init(){
       NUM.forEach(f=>{if(r[f]!==undefined)r[f]=N(r[f])});
       // Use Sequence column (new) or Sequence Name (old) for derivation
       const seqField=r['Sequence']||r['Sequence Name']||'';
-      r.version=r['Messaging Version']&&r['Messaging Version']!=='nan'?r['Messaging Version']:normVer(seqField);
+      const mv=r['Messaging Version']||'';
+      r.version=(mv&&mv!=='nan'&&mv!=='NaN'&&mv!=='N/A'&&mv!=='')?mv:normVer(seqField);
       r.sender=r['Sender']||normSender(seqField);
       r.channel=r['Channel Strategy']||normChannel(seqField);
       r.campaign=r['Campaign']||normCamp(r['Campaign Name']||seqField);
