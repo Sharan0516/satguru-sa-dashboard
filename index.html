@@ -812,10 +812,13 @@ function renderTracker(D){
   overall+=dataRow('Total Leads Outreached',contacted);
   overall+=dataRow('Phone Nos. Enriched','--','--');
   overall+=secRow('EMAIL');
+  const emailScheduled=D.filter(r=>r['Conversation Stage']==='contact_scheduled'&&(r.channel==='Hybrid'||r.channel==='Email Only')).length;
+  const liScheduled=D.filter(r=>r['Conversation Stage']==='contact_scheduled'&&(r.channel==='Hybrid'||r.channel==='LinkedIn Only')).length;
+  const connScheduled=D.filter(r=>r['Conversation Stage']==='connection_scheduled').length;
   overall+=dataRow('UNIQUE LEADS EMAILED',emailLeads);
   overall+=dataRow('TOTAL EMAILS SENT',eS);
   overall+=dataRow('SENDS PER PROSPECT',eS>0&&emailLeads>0?(eS/emailLeads).toFixed(1):'--');
-  overall+=dataRow('MESSAGE SCHEDULED',scheduled);
+  overall+=dataRow('EMAILS SCHEDULED (PENDING)',emailScheduled);
   overall+=dataRow('EMAILS DELIVERED',eD);
   overall+=pctRow('Delivery Rate %',eD,eS);
   overall+=dataRow('EMAILS BOUNCED',eB);
@@ -827,7 +830,7 @@ function renderTracker(D){
   overall+=dataRow('Version B Replies',S(vB,'Email Replies'));
   overall+=secRow('LINKEDIN');
   overall+=dataRow('UNIQUE LEADS TARGETED',liLeads);
-  overall+=dataRow('CONN. ACTIONS SCHEDULED',S(D,'LI Connection Actions'));
+  overall+=dataRow('LINKEDIN SCHEDULED (PENDING)',liScheduled+connScheduled);
   overall+=dataRow('CONNECTION REQUESTS SENT',lS);
   // Opens/clicks removed - not reliable
   overall+=dataRow('CONNECTIONS ACCEPTED',lA);
@@ -848,7 +851,7 @@ function renderTracker(D){
   const pLS=S(pharmaD,'LI Connections Sent'),pLA=S(pharmaD,'LI Connections Accepted'),pLM=S(pharmaD,'LI Messages Sent'),pLR=S(pharmaD,'LI Replies');
   // pharma LI metrics use clean field names
   const pContacted=pharmaD.filter(r=>r['Conversation Stage']==='contacted').length;
-  const pScheduled=pharmaD.filter(r=>r['Conversation Stage']==='contact_scheduled').length;
+  const pEmailScheduled=pharmaD.filter(r=>r['Conversation Stage']==='contact_scheduled'&&(r.channel==='Hybrid'||r.channel==='Email Only')).length;
   const pEmailLeads=pharmaD.filter(r=>N(r['Email Sent'])>0).length;
   const pLiLeads=pharmaD.filter(r=>N(r['LI Connections Sent'])>0).length;
   const pVA=pharmaD.filter(r=>r.version==='A'),pVB=pharmaD.filter(r=>r.version==='B');
@@ -863,7 +866,7 @@ function renderTracker(D){
   s1+=dataRow('# Unique Leads Emailed',pEmailLeads);
   s1+=dataRow('# Total Emails Sent',pES);
   s1+=dataRow('Sends per Prospect',pEmailLeads>0?(pES/pEmailLeads).toFixed(1):'--');
-  s1+=dataRow('# Emails Scheduled',pScheduled);
+  s1+=dataRow('# Emails Scheduled (Pending)',pEmailScheduled);
   s1+=dataRow('# Emails Delivered',pED);
   s1+=pctRow('Delivery Rate %',pED,pES);
   s1+=dataRow('# Emails Bounced',pEB);
