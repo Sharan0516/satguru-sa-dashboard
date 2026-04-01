@@ -818,6 +818,7 @@ function renderTracker(D){
   overall+=dataRow('MESSAGE SCHEDULED',scheduled);
   overall+=dataRow('EMAILS DELIVERED',eD);
   overall+=pctRow('Delivery Rate %',eD,eS);
+  overall+=dataRow('EMAILS BOUNCED',eB);
   overall+=pctRow('Bounce Rate %',eB,eS);
   overall+=dataRow('TOTAL RESPONSE',eR);
   overall+=dataRow('QUALIFIED RESPONSE',eR);
@@ -865,6 +866,7 @@ function renderTracker(D){
   s1+=dataRow('# Emails Scheduled',pScheduled);
   s1+=dataRow('# Emails Delivered',pED);
   s1+=pctRow('Delivery Rate %',pED,pES);
+  s1+=dataRow('# Emails Bounced',pEB);
   s1+=pctRow('Bounce Rate %',pEB,pES);
   s1+=pctRow('Reply Rate %',pER,pES);
   s1+=dataRow('Positive Replies',pER);
