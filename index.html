@@ -717,7 +717,11 @@ function render(){
     abD+=`<div style="padding:0 14px 10px;${l==='B'?'border-left:1px solid var(--g100);':''}">
       <div style="font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;margin-bottom:8px;">Version ${l}</div>
       <div style="font-size:20px;font-weight:800;">${rows.length} <span style="font-size:11px;font-weight:500;color:var(--g400);">leads</span></div>
-      <ul class="ml" style="margin-top:8px;">${mli([['Email Sent',S(rows,'Email Sent')],['LinkedIn Sent',S(rows,'LI Connections Sent')],['LinkedIn Accepted',S(rows,'LI Connections Accepted')],['Email Replies',S(rows,'Email Replies')],['LinkedIn Replies',S(rows,'LI Replies')]])}</ul>
+      <ul class="ml" style="margin-top:8px;">${(()=>{
+        const abES=S(rows,'Email Sent'),abER=S(rows,'Email Replies'),abLS=S(rows,'LI Connections Sent'),abLA=S(rows,'LI Connections Accepted'),abLR=S(rows,'LI Replies');
+        const p=(n,d)=>d>0?' <span style="font-size:9px;color:var(--g400);">('+((n/d)*100).toFixed(1)+'%)</span>':'';
+        return mli([['Email Sent',abES],['Email Replies',''+abER+p(abER,abES)],['Conn. Requests Sent',abLS],['Connections Accepted',''+abLA+p(abLA,abLS)],['LinkedIn Replies',''+abLR+p(abLR,abLS)]]);
+      })()}</ul>
       ${S(rows,'LI Connection Actions')>0&&S(rows,'LI Connections Sent')===0?`<div style="font-size:9px;color:var(--g400);margin-top:4px;">${S(rows,'LI Connection Actions')} LinkedIn actions scheduled, pending execution</div>`:''}
     </div>`;
   });
@@ -760,14 +764,22 @@ function render(){
     const lM_s=S(r,'LI Messages Sent');const lR_s=S(r,'LI Replies');
     const tT_s=eS_s+lS_s;const tR_s=eR_s+lR_s;
     const rr=tT_s>0?(tR_s/tT_s*100).toFixed(1)+'%':'--';
-    stH+=`<tr><td class="nm">${s}</td><td class="r">${r.length}</td><td class="r">${eS_s}</td><td class="r" style="font-weight:700;${eR_s>0?'color:var(--brand);':''}">${eR_s}</td><td class="r">${lS_s}</td><td class="r">${lA_s}</td><td class="r">${lM_s}</td><td class="r" style="font-weight:700;${lR_s>0?'color:var(--brand);':''}">${lR_s}</td><td class="r" style="font-weight:600;">${rr}</td></tr>`;
+    const eRpct=eS_s>0?' <span style="font-size:9px;color:var(--g400);font-weight:400;">('+((eR_s/eS_s)*100).toFixed(1)+'%)</span>':'';
+    const lApct=lS_s>0?' <span style="font-size:9px;color:var(--g400);font-weight:400;">('+((lA_s/lS_s)*100).toFixed(1)+'%)</span>':'';
+    const lRpct=lS_s>0?' <span style="font-size:9px;color:var(--g400);font-weight:400;">('+((lR_s/lS_s)*100).toFixed(1)+'%)</span>':'';
+    stH+=`<tr><td class="nm">${s}</td><td class="r">${r.length}</td><td class="r">${eS_s}</td><td class="r" style="font-weight:700;${eR_s>0?'color:var(--brand);':''}">${eR_s}${eRpct}</td><td class="r">${lS_s}</td><td class="r" style="font-weight:700;">${lA_s}${lApct}</td><td class="r">${lM_s}</td><td class="r" style="font-weight:700;${lR_s>0?'color:var(--brand);':''}">${lR_s}${lRpct}</td><td class="r" style="font-weight:600;">${rr}</td></tr>`;
   });
   stH+='</tbody></table>';
   document.getElementById('d_senderTable').innerHTML=stH;
 
   // Channel table
   const chG=G(D,'channel');
-  document.getElementById('d_chTb').innerHTML=['Hybrid','Email Only','LinkedIn Only'].filter(c=>chG[c]).map(c=>{const r=chG[c];return`<tr><td class="nm">${c}</td><td class="r">${r.length}</td><td class="r">${S(r,'Email Sent')}</td><td class="r">${S(r,'LI Connections Sent')}</td><td class="r">${S(r,'LI Connections Accepted')}</td><td class="r" style="font-weight:700;">${S(r,'Email Replies')}</td><td class="r" style="font-weight:700;">${S(r,'LI Replies')}</td></tr>`}).join('');
+  document.getElementById('d_chTb').innerHTML=['Hybrid','Email Only','LinkedIn Only'].filter(c=>chG[c]).map(c=>{
+    const r=chG[c];const cES=S(r,'Email Sent');const cER=S(r,'Email Replies');const cLS=S(r,'LI Connections Sent');const cLA=S(r,'LI Connections Accepted');const cLR=S(r,'LI Replies');
+    const cERp=cES>0?' <span style="font-size:9px;color:var(--g400);">('+((cER/cES)*100).toFixed(1)+'%)</span>':'';
+    const cLAp=cLS>0?' <span style="font-size:9px;color:var(--g400);">('+((cLA/cLS)*100).toFixed(1)+'%)</span>':'';
+    const cLRp=cLS>0?' <span style="font-size:9px;color:var(--g400);">('+((cLR/cLS)*100).toFixed(1)+'%)</span>':'';
+    return`<tr><td class="nm">${c}</td><td class="r">${r.length}</td><td class="r">${cES}</td><td class="r">${cLS}</td><td class="r" style="font-weight:700;">${cLA}${cLAp}</td><td class="r" style="font-weight:700;">${cER}${cERp}</td><td class="r" style="font-weight:700;">${cLR}${cLRp}</td></tr>`}).join('');
 
   // Send timing charts - hidden until enough data
   /* UNCOMMENT WHEN READY:
