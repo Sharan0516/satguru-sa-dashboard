@@ -229,34 +229,37 @@
   <!-- ============================================================ -->
   <div class="view active" id="v-exec">
 
-    <div class="sboard" style="grid-template-columns:repeat(6,1fr);">
-      <div class="sc primary"><div class="sc-v" id="exLeads">--</div><div class="sc-l">Leads</div></div>
-      <div class="sc"><div class="sc-v" id="exCos">--</div><div class="sc-l">Companies</div></div>
-      <div class="sc"><div class="sc-v" id="exEmailS">--</div><div class="sc-l">Emails (Unique / Total)</div></div>
-      <div class="sc"><div class="sc-v" id="exLiS">--</div><div class="sc-l">LinkedIn Requests Sent</div></div>
-      <div class="sc primary"><div class="sc-v" id="exReply">0</div><div class="sc-l">Replies</div></div>
+    <div class="sboard" style="grid-template-columns:repeat(5,1fr);">
+      <div class="sc primary" title="Total number of individual leads in the pipeline"><div class="sc-v" id="exLeads">--</div><div class="sc-l">Leads</div></div>
+      <div class="sc" title="Unique companies represented across all leads"><div class="sc-v" id="exCos">--</div><div class="sc-l">Companies</div></div>
+      <div class="sc" title="Unique leads emailed / total email sends (includes follow-ups)"><div class="sc-v" id="exEmailS">--</div><div class="sc-l">Emails (Unique / Total)</div></div>
+      <div class="sc" title="LinkedIn connection requests actually sent to leads"><div class="sc-v" id="exLiS">--</div><div class="sc-l">LinkedIn Requests Sent</div></div>
+      <div class="sc primary" title="Total inbound replies across email and LinkedIn"><div class="sc-v" id="exReply">0</div><div class="sc-l">Replies</div></div>
     </div>
 
     <!-- Lead Enrichment (inline badges below scoreboard) -->
-    <div id="exEnrichment" style="display:flex;gap:8px;margin-bottom:16px;"></div>
+    <div id="exEnrichment" style="display:flex;gap:8px;margin-bottom:10px;"></div>
+    <div id="exEmailStatus" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;"></div>
 
-    <div class="exec-grid" id="exGrid">
+    <div class="g2">
       <!-- Email Funnel -->
       <div class="exec-card">
         <div class="exec-card-title">Email Funnel</div>
         <div id="exEmailFunnel"></div>
+        <ul class="ml" id="exEmailMetrics" style="margin-top:12px;border-top:1px solid var(--g100);padding-top:10px;"></ul>
       </div>
       <!-- LinkedIn Funnel -->
       <div class="exec-card">
         <div class="exec-card-title">LinkedIn Funnel</div>
         <div id="exLiFunnel"></div>
+        <ul class="ml" id="exLiMetrics" style="margin-top:12px;border-top:1px solid var(--g100);padding-top:10px;"></ul>
       </div>
-      <!-- A/B card -->
-      <div class="exec-card">
-        <div class="exec-card-title">A/B Message Performance</div>
-        <div id="exAB"></div>
-        <div id="exABNote"></div>
-      </div>
+    </div>
+
+    <div class="exec-card mb16">
+      <div class="exec-card-title">A/B Message Performance</div>
+      <div id="exAB"></div>
+      <div id="exABNote"></div>
     </div>
 
   </div>
@@ -266,12 +269,12 @@
   <!-- ============================================================ -->
   <div class="view" id="v-detail">
 
-    <div class="sboard" style="grid-template-columns:repeat(6,1fr);">
-      <div class="sc primary"><div class="sc-v" id="d_leads">--</div><div class="sc-l">Leads</div></div>
-      <div class="sc"><div class="sc-v" id="d_cos">--</div><div class="sc-l">Companies</div></div>
-      <div class="sc"><div class="sc-v" id="d_email">--</div><div class="sc-l">Emails Sent</div></div>
-      <div class="sc"><div class="sc-v" id="d_li">--</div><div class="sc-l">LinkedIn Requests</div></div>
-      <div class="sc primary"><div class="sc-v" id="d_reply">--</div><div class="sc-l">Replies</div></div>
+    <div class="sboard" style="grid-template-columns:repeat(5,1fr);">
+      <div class="sc primary" title="Total number of individual leads in the pipeline"><div class="sc-v" id="d_leads">--</div><div class="sc-l">Leads</div></div>
+      <div class="sc" title="Unique companies represented across all leads"><div class="sc-v" id="d_cos">--</div><div class="sc-l">Companies</div></div>
+      <div class="sc" title="Total email sends including follow-ups"><div class="sc-v" id="d_email">--</div><div class="sc-l">Emails Sent</div></div>
+      <div class="sc" title="LinkedIn connection requests actually sent to leads"><div class="sc-v" id="d_li">--</div><div class="sc-l">LinkedIn Requests</div></div>
+      <div class="sc primary" title="Total inbound replies across email and LinkedIn"><div class="sc-v" id="d_reply">--</div><div class="sc-l">Replies</div></div>
     </div>
 
     <div style="display:flex;gap:10px;margin-bottom:10px;" id="dEnrichment"></div>
@@ -420,7 +423,7 @@
 
   </div>
 
-  <div class="footer">Powered by <a href="https://lumif.ai">lumif.ai</a> | Data refreshes on page load</div>
+  <div class="footer">Powered by <a href="https://lumif.ai">lumif.ai</a></div>
 </div>
 
 <script>
@@ -569,6 +572,14 @@ function render(){
   ];
   document.getElementById('exEmailFunnel').innerHTML=buildFunnel(emailFunnel,emailPool);
 
+  // Exec email supplementary metrics
+  document.getElementById('exEmailMetrics').innerHTML=mli([
+    ['Total Emails Sent',eS],
+    ['Sends per Prospect',eSendsPerLead],
+    ['Bounced',eB],
+    ['Reply Rate',eS>0?(eR/eS*100).toFixed(1)+'%':'--'],
+  ]);
+
   // LinkedIn funnel - starts from leads targeted via LinkedIn (Hybrid + LinkedIn Only)
   const liPool=D.filter(r=>r.channel==='Hybrid'||r.channel==='LinkedIn Only').length;
   const liFunnel=[
@@ -579,6 +590,33 @@ function render(){
     {label:'LinkedIn Replies',value:lR},
   ];
   document.getElementById('exLiFunnel').innerHTML=buildFunnel(liFunnel,liPool);
+
+  // Exec LinkedIn supplementary metrics
+  document.getElementById('exLiMetrics').innerHTML=mli([
+    ['Actions Scheduled',lActions],
+    ['Accept Rate',lS>0?(aA/lS*100).toFixed(1)+'%':'--'],
+    ['Reply Rate',lS>0?(lR/lS*100).toFixed(1)+'%':'--'],
+  ]);
+
+  // Email delivery status chips (shared between exec and detailed)
+  const statusCounts={};
+  D.forEach(r=>{const s=r['Email Delivery Status']||'Unknown';statusCounts[s]=(statusCounts[s]||0)+1});
+  const statusOrder=['Delivered','Bounced','Failed','Processing','Sent','Not Sent','Replied'];
+  const statusColors={'Delivered':'#22C55E','Bounced':'#EF4444','Failed':'#F97316','Processing':'#3B82F6','Sent':'#94A3B8','Not Sent':'#CBD5E1','Replied':'#E94D35','Unknown':'#CBD5E1'};
+  function statusChip(label,count){
+    const c=statusColors[label]||'#CBD5E1';
+    const pct=D.length>0?(count/D.length*100).toFixed(0):0;
+    return `<div style="display:inline-flex;align-items:center;gap:6px;background:${c}10;border:1px solid ${c}30;border-radius:6px;padding:4px 10px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:${c};flex-shrink:0;"></span>
+      <span style="font-size:10px;color:var(--g600);">${label}:</span>
+      <span style="font-size:12px;font-weight:700;color:var(--g900);">${count}</span>
+      <span style="font-size:9px;color:var(--g400);">(${pct}%)</span>
+    </div>`;
+  }
+  let emailStatusHtml='';
+  statusOrder.forEach(s=>{if(statusCounts[s])emailStatusHtml+=statusChip(s,statusCounts[s])});
+  if(statusCounts['Unknown'])emailStatusHtml+=statusChip('Unknown',statusCounts['Unknown']);
+  document.getElementById('exEmailStatus').innerHTML=emailStatusHtml;
 
   // A/B
   const vG=G(D,'version');
@@ -615,25 +653,8 @@ function render(){
     enrichChip('Email Only',emailOnly)+
     enrichChip('LinkedIn Only',liOnly);
 
-  // Email Delivery Status distribution
-  const statusCounts={};
-  D.forEach(r=>{const s=r['Email Delivery Status']||'Unknown';statusCounts[s]=(statusCounts[s]||0)+1});
-  const statusOrder=['Delivered','Bounced','Failed','Processing','Sent','Not Sent','Replied'];
-  const statusColors={'Delivered':'#22C55E','Bounced':'#EF4444','Failed':'#F97316','Processing':'#3B82F6','Sent':'#94A3B8','Not Sent':'#CBD5E1','Replied':'#E94D35','Unknown':'#CBD5E1'};
-  function statusChip(label,count){
-    const c=statusColors[label]||'#CBD5E1';
-    const pct=D.length>0?(count/D.length*100).toFixed(0):0;
-    return `<div style="display:inline-flex;align-items:center;gap:6px;background:${c}10;border:1px solid ${c}30;border-radius:6px;padding:4px 10px;">
-      <span style="width:6px;height:6px;border-radius:50%;background:${c};flex-shrink:0;"></span>
-      <span style="font-size:10px;color:var(--g600);">${label}:</span>
-      <span style="font-size:12px;font-weight:700;color:var(--g900);">${count}</span>
-      <span style="font-size:9px;color:var(--g400);">(${pct}%)</span>
-    </div>`;
-  }
-  let statusHtml='';
-  statusOrder.forEach(s=>{if(statusCounts[s])statusHtml+=statusChip(s,statusCounts[s])});
-  if(statusCounts['Unknown'])statusHtml+=statusChip('Unknown',statusCounts['Unknown']);
-  document.getElementById('dEmailStatus').innerHTML=statusHtml;
+  // Email Delivery Status (reuse from exec view)
+  document.getElementById('dEmailStatus').innerHTML=emailStatusHtml;
 
   // Email Funnel Chart (detailed view)
   function funnelChart(canvasId,steps){
