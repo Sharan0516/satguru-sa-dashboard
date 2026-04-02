@@ -229,11 +229,12 @@
   <!-- ============================================================ -->
   <div class="view active" id="v-exec">
 
-    <div class="sboard" style="grid-template-columns:repeat(5,1fr);">
+    <div class="sboard" style="grid-template-columns:repeat(6,1fr);">
       <div class="sc primary" title="Total number of individual leads in the pipeline"><div class="sc-v" id="exLeads">--</div><div class="sc-l">Leads</div></div>
       <div class="sc" title="Unique companies represented across all leads"><div class="sc-v" id="exCos">--</div><div class="sc-l">Companies</div></div>
       <div class="sc" title="Unique leads emailed / total email sends (includes follow-ups)"><div class="sc-v" id="exEmailS">--</div><div class="sc-l">Emails (Unique / Total)</div></div>
       <div class="sc" title="LinkedIn connection requests actually sent to leads"><div class="sc-v" id="exLiS">--</div><div class="sc-l">LinkedIn Requests Sent</div></div>
+      <div class="sc" title="Direct messages sent to leads after they accepted the LinkedIn connection"><div class="sc-v" id="exLiDM">--</div><div class="sc-l">LinkedIn DMs Sent</div></div>
       <div class="sc primary" title="Total inbound replies across email and LinkedIn"><div class="sc-v" id="exReply">0</div><div class="sc-l">Replies</div></div>
     </div>
 
@@ -269,11 +270,12 @@
   <!-- ============================================================ -->
   <div class="view" id="v-detail">
 
-    <div class="sboard" style="grid-template-columns:repeat(5,1fr);">
+    <div class="sboard" style="grid-template-columns:repeat(6,1fr);">
       <div class="sc primary" title="Total number of individual leads in the pipeline"><div class="sc-v" id="d_leads">--</div><div class="sc-l">Leads</div></div>
       <div class="sc" title="Unique companies represented across all leads"><div class="sc-v" id="d_cos">--</div><div class="sc-l">Companies</div></div>
       <div class="sc" title="Total email sends including follow-ups"><div class="sc-v" id="d_email">--</div><div class="sc-l">Emails Sent</div></div>
       <div class="sc" title="LinkedIn connection requests actually sent to leads"><div class="sc-v" id="d_li">--</div><div class="sc-l">LinkedIn Requests</div></div>
+      <div class="sc" title="Direct messages sent to leads after they accepted the LinkedIn connection"><div class="sc-v" id="d_liDM">--</div><div class="sc-l">LinkedIn DMs Sent</div></div>
       <div class="sc primary" title="Total inbound replies across email and LinkedIn"><div class="sc-v" id="d_reply">--</div><div class="sc-l">Replies</div></div>
     </div>
 
@@ -523,6 +525,7 @@ function render(){
   document.getElementById('exReply').textContent=tR.toLocaleString();
   document.getElementById('exEmailS').textContent=eUniq+' / '+eS;
   document.getElementById('exLiS').textContent=lS.toLocaleString();
+  document.getElementById('exLiDM').textContent=lM.toLocaleString();
 
   // Build funnel HTML helper
   function buildFunnel(steps,maxVal){
@@ -645,6 +648,7 @@ function render(){
   document.getElementById('d_cos').textContent=U(D,'Company Name').toLocaleString();
   document.getElementById('d_email').textContent=eS.toLocaleString();
   document.getElementById('d_li').textContent=lS.toLocaleString();
+  document.getElementById('d_liDM').textContent=lM.toLocaleString();
   document.getElementById('d_reply').textContent=tR.toLocaleString();
 
   // Lead enrichment (detailed view) - reuse same counts from exec
