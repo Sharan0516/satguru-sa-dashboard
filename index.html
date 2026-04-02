@@ -275,7 +275,8 @@
       <div class="sc primary"><div class="sc-v" id="d_meet">--</div><div class="sc-l">Meetings</div></div>
     </div>
 
-    <div style="display:flex;gap:10px;margin-bottom:16px;" id="dEnrichment"></div>
+    <div style="display:flex;gap:10px;margin-bottom:10px;" id="dEnrichment"></div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;" id="dEmailStatus"></div>
 
     <div class="g2">
       <div class="card">
@@ -298,10 +299,14 @@
       <div class="card">
         <div class="card-hd"><div class="card-t">A/B Message Testing</div><div class="card-s">Version A vs B (aggregated across senders)</div></div>
         <div class="card-bd" id="d_ab"></div>
+        <div id="d_abNote" style="padding:4px 18px 14px;"></div>
       </div>
       <div class="card">
         <div class="card-hd"><div class="card-t">Sender Comparison</div><div class="card-s">Engagement by sender persona</div></div>
-        <div class="card-bd"><div class="chart-w"><canvas id="chSender"></canvas></div></div>
+        <div class="card-bd">
+          <div class="chart-w"><canvas id="chSender"></canvas></div>
+          <div id="d_senderTable" style="margin-top:12px;border-top:1px solid var(--g100);padding-top:10px;"></div>
+        </div>
       </div>
     </div>
 
@@ -324,6 +329,22 @@
       </div>
     </div>
     -->
+
+    <div class="card mb16">
+      <div class="card-hd">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div><div class="card-t">Step Progression</div><div class="card-s">How many leads have reached each step in the sequence</div></div>
+          <select id="stepCampFilter" class="fsel" style="min-width:160px;"></select>
+        </div>
+      </div>
+      <div style="padding:0;">
+        <table class="dt" id="d_stepTable">
+          <thead><tr><th>Step</th><th>Channel</th><th class="r">Leads in Step</th><th class="r">Sent</th><th class="r">Delivered</th><th class="r">Bounced</th><th class="r">Replies</th><th class="r">Reply Rate</th></tr></thead>
+          <tbody id="d_stepBody"></tbody>
+        </table>
+      </div>
+      <div id="d_stepNote" style="padding:8px 18px;font-size:10px;color:var(--g400);"></div>
+    </div>
 
     <div class="card mb16">
       <div class="card-hd"><div class="card-t">Company Coverage</div><div class="card-s" id="d_coSub">--</div></div>
@@ -402,6 +423,8 @@
 <script>
 const GSHEET_ID='1Tm2r2PlI14uLcJ5ghsQgHG2b9o9hVzNB152WbV-JtsA';
 const SHEET_NAME='Lead Summary';
+const STEP_PERF_SHEET='Step Performance';
+let STEP_PERF=[];  // step performance data from separate sheet
 
 // === NORMALIZATION ===
 function normVer(seq){
@@ -454,6 +477,7 @@ function applyF(){FLT=ALL.filter(r=>Object.entries(FM).every(([id,f])=>{const v=
 function resetF(){Object.keys(FM).forEach(id=>{document.getElementById(id).value=''});applyF()}
 Object.keys(FM).forEach(id=>document.getElementById(id).addEventListener('change',applyF));
 document.getElementById('fReset').addEventListener('click',resetF);
+document.getElementById('stepCampFilter').addEventListener('change',()=>renderStepProgress());
 
 // === RENDER ===
 function render(){
@@ -579,6 +603,26 @@ function render(){
     enrichChip('Email Only',emailOnly)+
     enrichChip('LinkedIn Only',liOnly);
 
+  // Email Delivery Status distribution
+  const statusCounts={};
+  D.forEach(r=>{const s=r['Email Delivery Status']||'Unknown';statusCounts[s]=(statusCounts[s]||0)+1});
+  const statusOrder=['Delivered','Bounced','Failed','Processing','Sent','Not Sent','Replied'];
+  const statusColors={'Delivered':'#22C55E','Bounced':'#EF4444','Failed':'#F97316','Processing':'#3B82F6','Sent':'#94A3B8','Not Sent':'#CBD5E1','Replied':'#E94D35','Unknown':'#CBD5E1'};
+  function statusChip(label,count){
+    const c=statusColors[label]||'#CBD5E1';
+    const pct=D.length>0?(count/D.length*100).toFixed(0):0;
+    return `<div style="display:inline-flex;align-items:center;gap:6px;background:${c}10;border:1px solid ${c}30;border-radius:6px;padding:4px 10px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:${c};flex-shrink:0;"></span>
+      <span style="font-size:10px;color:var(--g600);">${label}:</span>
+      <span style="font-size:12px;font-weight:700;color:var(--g900);">${count}</span>
+      <span style="font-size:9px;color:var(--g400);">(${pct}%)</span>
+    </div>`;
+  }
+  let statusHtml='';
+  statusOrder.forEach(s=>{if(statusCounts[s])statusHtml+=statusChip(s,statusCounts[s])});
+  if(statusCounts['Unknown'])statusHtml+=statusChip('Unknown',statusCounts['Unknown']);
+  document.getElementById('dEmailStatus').innerHTML=statusHtml;
+
   // Email Funnel Chart (detailed view)
   function funnelChart(canvasId,steps){
     const mx=steps[0].value||1;
@@ -664,6 +708,24 @@ function render(){
   abD+='</div>';
   document.getElementById('d_ab').innerHTML=abD;
 
+  // A/B note: show excluded leads
+  const abTotal=vA.length+vB.length;
+  const abExcluded=D.length-abTotal;
+  if(abExcluded>0){
+    const exEmailOnly=D.filter(r=>r.channel==='Email Only'&&r.version!=='A'&&r.version!=='B').length;
+    const exLiOnly=D.filter(r=>r.channel==='LinkedIn Only'&&r.version!=='A'&&r.version!=='B').length;
+    const exNoVer=D.filter(r=>r.version==='N/A'||r.version==='').length;
+    let parts=[];
+    if(exEmailOnly>0)parts.push(`${exEmailOnly} Email Only`);
+    if(exLiOnly>0)parts.push(`${exLiOnly} LinkedIn Only`);
+    if(exNoVer>0)parts.push(`${exNoVer} non-versioned`);
+    document.getElementById('d_abNote').innerHTML=`<div style="font-size:10px;color:var(--g400);background:var(--g50);border-radius:6px;padding:8px 12px;">
+      Showing <strong>${abTotal}</strong> of ${D.length} leads in A/B-tested sequences. ${abExcluded} leads excluded${parts.length?': '+parts.join(', '):''}.
+    </div>`;
+  } else {
+    document.getElementById('d_abNote').innerHTML='';
+  }
+
   // Sender chart
   const sG=G(D,'sender');const sN=Object.keys(sG).sort();
   charts.push(new Chart(document.getElementById('chSender'),{type:'bar',data:{labels:sN.map(s=>`${s} (${sG[s].length})`),datasets:[
@@ -672,6 +734,19 @@ function render(){
     {label:'Email Replies',data:sN.map(s=>S(sG[s],'Email Replies')),backgroundColor:'rgba(233,77,53,1)',borderRadius:4},
     {label:'LinkedIn Replies',data:sN.map(s=>S(sG[s],'LI Replies')),backgroundColor:'rgba(100,116,139,0.9)',borderRadius:4},
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{usePointStyle:true,pointStyle:'rectRounded',font:{family:'Inter',size:10},padding:10}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:10}}},y:{grid:{color:'#F1F5F9'},beginAtZero:true,ticks:{font:{size:9}}}}}}));
+
+  // Sender table (full funnel breakdown per sender)
+  let stH='<table class="dt" style="font-size:10px;"><thead><tr><th>Sender</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">Email Replies</th><th class="r">LI Sent</th><th class="r">Accepted</th><th class="r">DMs Sent</th><th class="r">LI Replies</th><th class="r">Reply Rate</th></tr></thead><tbody>';
+  sN.forEach(s=>{
+    const r=sG[s];const eS_s=S(r,'Email Sent');const eR_s=S(r,'Email Replies');
+    const lS_s=S(r,'LI Connections Sent');const lA_s=S(r,'LI Connections Accepted');
+    const lM_s=S(r,'LI Messages Sent');const lR_s=S(r,'LI Replies');
+    const tT_s=eS_s+lS_s;const tR_s=eR_s+lR_s;
+    const rr=tT_s>0?(tR_s/tT_s*100).toFixed(1)+'%':'--';
+    stH+=`<tr><td class="nm">${s}</td><td class="r">${r.length}</td><td class="r">${eS_s}</td><td class="r" style="font-weight:700;${eR_s>0?'color:var(--brand);':''}">${eR_s}</td><td class="r">${lS_s}</td><td class="r">${lA_s}</td><td class="r">${lM_s}</td><td class="r" style="font-weight:700;${lR_s>0?'color:var(--brand);':''}">${lR_s}</td><td class="r" style="font-weight:600;">${rr}</td></tr>`;
+  });
+  stH+='</tbody></table>';
+  document.getElementById('d_senderTable').innerHTML=stH;
 
   // Channel table
   const chG=G(D,'channel');
@@ -759,7 +834,69 @@ function render(){
   </tr>`).join('');
 
   // === WEEKLY TRACKER ===
+  // Step progress
+  renderStepProgress();
+
   renderTracker(D);
+}
+
+function renderStepProgress(){
+  if(!STEP_PERF.length){
+    document.getElementById('d_stepBody').innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--g400);padding:20px;">Run the updated Apps Script to generate Step Performance data</td></tr>';
+    return;
+  }
+  // Populate campaign filter
+  const sel=document.getElementById('stepCampFilter');
+  const campaigns=[...new Set(STEP_PERF.map(r=>r['Sequence']||'').filter(Boolean))].sort();
+  const curVal=sel.value;
+  sel.innerHTML='<option value="">All Campaigns</option>'+campaigns.map(c=>`<option value="${c}"${c===curVal?' selected':''}>${c}</option>`).join('');
+
+  // Filter step perf data
+  let spD=STEP_PERF;
+  if(sel.value)spD=spD.filter(r=>(r['Sequence']||'')===sel.value);
+
+  // Aggregate by step order + channel (across campaigns if "All")
+  const stepMap={};
+  spD.forEach(r=>{
+    const key=r['Step Order']+'|'+(r['Step Channel']||'');
+    if(!stepMap[key]){
+      stepMap[key]={step:N(r['Step Order']),channel:r['Step Channel']||'',leads:0,sent:0,delivered:0,bounced:0,replies:0};
+    }
+    const s=stepMap[key];
+    s.leads+=N(r['Leads in Step']);
+    s.sent+=N(r['Email Sent'])+N(r['LI Connections Sent'])+N(r['LI Messages Sent']);
+    s.delivered+=N(r['Email Delivered'])+N(r['Aimfox Accepted']);
+    s.bounced+=N(r['Email Bounced']);
+    s.replies+=N(r['Email Replies'])+N(r['Aimfox Replies']);
+  });
+
+  const steps=Object.values(stepMap).sort((a,b)=>a.step-b.step);
+  const maxLeads=steps.length>0?Math.max(...steps.map(s=>s.leads)):1;
+
+  let html='';
+  steps.forEach(s=>{
+    const rr=s.sent>0?(s.replies/s.sent*100).toFixed(1)+'%':'--';
+    const pct=maxLeads>0?Math.round(s.leads/maxLeads*100):0;
+    const barColor=s.leads===maxLeads?'var(--brand)':'var(--brand-35)';
+    html+=`<tr>
+      <td class="nm">Step ${s.step}</td>
+      <td>${s.channel}</td>
+      <td class="r"><div style="display:flex;align-items:center;gap:8px;justify-content:flex-end;"><div style="width:60px;height:6px;background:var(--g100);border-radius:3px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:3px;"></div></div>${s.leads.toLocaleString()}</div></td>
+      <td class="r">${s.sent.toLocaleString()}</td>
+      <td class="r">${s.delivered.toLocaleString()}</td>
+      <td class="r${s.bounced>0?' hl':''}">${s.bounced.toLocaleString()}</td>
+      <td class="r" style="font-weight:700;${s.replies>0?'color:var(--brand);':''}">${s.replies.toLocaleString()}</td>
+      <td class="r" style="font-weight:600;">${rr}</td>
+    </tr>`;
+  });
+  document.getElementById('d_stepBody').innerHTML=html||'<tr><td colspan="8" style="text-align:center;color:var(--g400);">No step data</td></tr>';
+
+  // Note
+  const totalLeadsInSteps=steps.length>0?steps[0].leads:0;
+  const stepsWithActivity=steps.filter(s=>s.sent>0).length;
+  document.getElementById('d_stepNote').textContent=stepsWithActivity>0?
+    `${stepsWithActivity} of ${steps.length} steps have fired. ${steps.length>stepsWithActivity?'Remaining steps are scheduled but not yet executed.':'All steps executed.'}`:
+    'No steps have been executed yet.';
 }
 
 function renderTracker(D){
@@ -963,6 +1100,16 @@ async function init(){
     });
     // Exclude test leads (Team/internal lumif.ai leads)
     ALL=ALL.filter(r=>r.sender!=='Team');
+    // Fetch Step Performance sheet
+    try{
+      const spUrl=`https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(STEP_PERF_SHEET)}`;
+      const spResp=await fetch(spUrl);
+      if(spResp.ok){
+        STEP_PERF=parseCSV(await spResp.text());
+        const spNums=['Leads in Step','Leads with Activity','Leads with Reply','Email Sent','Email Delivered','Email Bounced','Email Replies','LI Connections Sent','LI Messages Sent','Aimfox Accepted','Aimfox Replies','Total Touches','Total Replies'];
+        STEP_PERF.forEach(r=>{spNums.forEach(f=>{if(r[f]!==undefined)r[f]=N(r[f])})});
+      }
+    }catch(e){console.log('Step Performance sheet not found, skipping',e)}
     try{const dates=ALL.map(r=>r['Campaign Started']).filter(Boolean).sort();if(dates[0]){const d=new Date(dates[0]);document.getElementById('campDate').textContent=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});document.getElementById('weekBadge').textContent=`Week ${Math.max(1,Math.ceil((Date.now()-d.getTime())/(7*86400000)))}`}}catch(e){}
     document.getElementById('updDate').textContent=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
     popFilters();FLT=[...ALL];
