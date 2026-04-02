@@ -334,8 +334,8 @@
     <div class="card mb16">
       <div class="card-hd">
         <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div><div class="card-t">Sequence Step Progression</div><div class="card-s">How far leads have progressed through each step of the outreach sequence</div></div>
-          <select id="stepCampFilter" class="fsel" style="min-width:160px;"></select>
+          <div><div class="card-t">Sequence Step Progression</div><div class="card-s">Step-by-step breakdown per sequence. Select a sequence to see its structure.</div></div>
+          <select id="stepSeqFilter" class="fsel" style="min-width:200px;"></select>
         </div>
       </div>
       <div style="display:flex;gap:0;border-bottom:1px solid var(--g200);padding:0 18px;">
@@ -482,7 +482,7 @@ function applyF(){FLT=ALL.filter(r=>Object.entries(FM).every(([id,f])=>{const v=
 function resetF(){Object.keys(FM).forEach(id=>{document.getElementById(id).value=''});applyF()}
 Object.keys(FM).forEach(id=>document.getElementById(id).addEventListener('change',applyF));
 document.getElementById('fReset').addEventListener('click',resetF);
-document.getElementById('stepCampFilter').addEventListener('change',()=>renderStepProgress());
+document.getElementById('stepSeqFilter').addEventListener('change',()=>renderStepProgress());
 let stepActiveTab='email';
 document.querySelectorAll('.step-tab').forEach(tab=>{
   tab.addEventListener('click',()=>{
@@ -881,81 +881,90 @@ function renderStepProgress(){
   const isEmail=stepActiveTab==='email';
   const accentColor=isEmail?'var(--brand)':'#3B82F6';
 
-  // Channel filter: email steps vs linkedin steps
+  // Channel filter
   const emailChannels=['Email'];
   const liChannels=['LinkedIn Connection','LinkedIn Message'];
   const channelFilter=isEmail?emailChannels:liChannels;
 
-  // Populate campaign filter
-  const sel=document.getElementById('stepCampFilter');
-  const campaigns=[...new Set(STEP_PERF.map(r=>r['Sequence']||'').filter(Boolean))].sort();
+  // Populate sequence filter (unique sequences that have steps for selected channel)
+  const sel=document.getElementById('stepSeqFilter');
+  const seqsWithChannel=[...new Set(STEP_PERF.filter(r=>channelFilter.includes(r['Step Channel']||'')).map(r=>r['Sequence']||'').filter(Boolean))].sort();
   const curVal=sel.value;
-  sel.innerHTML='<option value="">All Campaigns</option>'+campaigns.map(c=>`<option value="${c}"${c===curVal?' selected':''}>${c}</option>`).join('');
+  // Auto-select first sequence if none selected or current not in list
+  const autoVal=(curVal&&seqsWithChannel.includes(curVal))?curVal:(seqsWithChannel[0]||'');
+  sel.innerHTML=seqsWithChannel.map(s=>`<option value="${s}"${s===autoVal?' selected':''}>${s}</option>`).join('');
 
-  // Filter by campaign and channel
-  let spD=STEP_PERF.filter(r=>channelFilter.includes(r['Step Channel']||''));
-  if(sel.value)spD=spD.filter(r=>(r['Sequence']||'')===sel.value);
+  // Filter by sequence and channel
+  const selectedSeq=sel.value||autoVal;
+  let spD=STEP_PERF.filter(r=>channelFilter.includes(r['Step Channel']||'')&&(r['Sequence']||'')===selectedSeq);
 
-  // Aggregate by step order (collapse channel subtypes for linkedin)
-  const stepMap={};
-  spD.forEach(r=>{
-    const stepNum=N(r['Step Order']);
-    if(!stepMap[stepNum]){
-      stepMap[stepNum]={step:stepNum,leads:0,sent:0,delivered:0,bounced:0,replies:0,channel:r['Step Channel']||''};
-    }
-    const s=stepMap[stepNum];
-    s.leads+=N(r['Leads in Step']);
-    if(isEmail){
-      s.sent+=N(r['Email Sent']);
-      s.delivered+=N(r['Email Delivered']);
-      s.bounced+=N(r['Email Bounced']);
-      s.replies+=N(r['Email Replies']);
-    } else {
-      s.sent+=N(r['LI Connections Sent'])+N(r['LI Messages Sent']);
-      s.delivered+=N(r['Aimfox Accepted']);
-      s.bounced+=0;
-      s.replies+=N(r['Aimfox Replies']);
-    }
+  // Sort by step order
+  spD.sort((a,b)=>N(a['Step Order'])-N(b['Step Order']));
+
+  // Build rows - one per step, no aggregation needed (single sequence = consistent structure)
+  const steps=spD.map(r=>{
+    const ch=r['Step Channel']||'';
+    return {
+      step:N(r['Step Order']),
+      channel:ch,
+      subtype:ch==='Email'?'Email':(ch==='LinkedIn Connection'?'Connection Request':'DM / Message'),
+      leads:N(r['Leads in Step']),
+      sent:isEmail?N(r['Email Sent']):(N(r['LI Connections Sent'])+N(r['LI Messages Sent'])),
+      delivered:isEmail?N(r['Email Delivered']):N(r['Aimfox Accepted']),
+      bounced:isEmail?N(r['Email Bounced']):0,
+      replies:isEmail?N(r['Email Replies']):N(r['Aimfox Replies']),
+    };
   });
 
-  const steps=Object.values(stepMap).sort((a,b)=>a.step-b.step);
-
-  // Renumber as "Email 1", "Email 2" or "LinkedIn 1", "LinkedIn 2"
-  const prefix=isEmail?'Email':'LinkedIn';
   const maxLeads=steps.length>0?Math.max(...steps.map(s=>s.leads)):1;
 
-  // Headers differ by channel
+  // Headers
   const headHtml=isEmail
-    ?'<tr><th>Step</th><th class="r">Leads</th><th class="r">Sent</th><th class="r">Delivered</th><th class="r">Bounced</th><th class="r">Replies</th><th class="r">Reply Rate</th></tr>'
-    :'<tr><th>Step</th><th class="r">Leads</th><th class="r">Requests Sent</th><th class="r">Accepted</th><th class="r">DMs / Messages</th><th class="r">Replies</th><th class="r">Reply Rate</th></tr>';
+    ?'<tr><th>Step</th><th class="r">Leads Assigned</th><th class="r">Sent</th><th class="r">Delivered</th><th class="r">Bounced</th><th class="r">Replies</th><th class="r">Reply Rate</th></tr>'
+    :'<tr><th>Step</th><th>Type</th><th class="r">Leads Assigned</th><th class="r">Sent</th><th class="r">Accepted</th><th class="r">Replies</th><th class="r">Reply Rate</th></tr>';
   document.getElementById('d_stepHead').innerHTML=headHtml;
 
+  const prefix=isEmail?'Email':'LinkedIn';
   let html='';
   steps.forEach((s,i)=>{
     const label=`${prefix} ${i+1}`;
     const rr=s.sent>0?(s.replies/s.sent*100).toFixed(1)+'%':'--';
     const pct=maxLeads>0?Math.round(s.leads/maxLeads*100):0;
     const barColor=s.sent>0?accentColor:(isEmail?'var(--brand-35)':'rgba(59,130,246,0.35)');
-    const firedLabel=s.sent>0?'':' style="color:var(--g300);"';
-    html+=`<tr${firedLabel}>
-      <td class="nm">${label}${s.sent===0?' <span style="font-size:9px;color:var(--g400);font-weight:400;">(scheduled)</span>':''}</td>
-      <td class="r"><div style="display:flex;align-items:center;gap:8px;justify-content:flex-end;"><div style="width:60px;height:6px;background:var(--g100);border-radius:3px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:3px;"></div></div>${s.leads.toLocaleString()}</div></td>
-      <td class="r">${s.sent.toLocaleString()}</td>
-      <td class="r">${s.delivered.toLocaleString()}</td>
-      <td class="r">${isEmail?(s.bounced>0?'<span style="color:var(--brand);">'+s.bounced.toLocaleString()+'</span>':s.bounced.toLocaleString()):s.bounced.toLocaleString()}</td>
-      <td class="r" style="font-weight:700;${s.replies>0?'color:'+accentColor+';':''}">${s.replies.toLocaleString()}</td>
-      <td class="r" style="font-weight:600;">${rr}</td>
-    </tr>`;
+    const firedStyle=s.sent>0?'':' style="color:var(--g300);"';
+    const scheduledTag=s.sent===0?' <span style="font-size:9px;color:var(--g400);font-weight:400;">(scheduled)</span>':'';
+    const leadsCell=`<div style="display:flex;align-items:center;gap:8px;justify-content:flex-end;"><div style="width:60px;height:6px;background:var(--g100);border-radius:3px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:3px;"></div></div>${s.leads.toLocaleString()}</div>`;
+
+    if(isEmail){
+      html+=`<tr${firedStyle}>
+        <td class="nm">${label}${scheduledTag}</td>
+        <td class="r">${leadsCell}</td>
+        <td class="r">${s.sent.toLocaleString()}</td>
+        <td class="r">${s.delivered.toLocaleString()}</td>
+        <td class="r">${s.bounced>0?'<span style="color:var(--brand);">'+s.bounced.toLocaleString()+'</span>':s.bounced.toLocaleString()}</td>
+        <td class="r" style="font-weight:700;${s.replies>0?'color:'+accentColor+';':''}">${s.replies.toLocaleString()}</td>
+        <td class="r" style="font-weight:600;">${rr}</td>
+      </tr>`;
+    } else {
+      html+=`<tr${firedStyle}>
+        <td class="nm">${label}${scheduledTag}</td>
+        <td style="font-size:10px;color:var(--g500);">${s.subtype}</td>
+        <td class="r">${leadsCell}</td>
+        <td class="r">${s.sent.toLocaleString()}</td>
+        <td class="r">${s.delivered.toLocaleString()}</td>
+        <td class="r" style="font-weight:700;${s.replies>0?'color:'+accentColor+';':''}">${s.replies.toLocaleString()}</td>
+        <td class="r" style="font-weight:600;">${rr}</td>
+      </tr>`;
+    }
   });
-  document.getElementById('d_stepBody').innerHTML=html||`<tr><td colspan="7" style="text-align:center;color:var(--g400);">No ${prefix.toLowerCase()} steps in selected campaign</td></tr>`;
+  document.getElementById('d_stepBody').innerHTML=html||`<tr><td colspan="7" style="text-align:center;color:var(--g400);">No ${prefix.toLowerCase()} steps in this sequence</td></tr>`;
 
   // Note
   const stepsWithActivity=steps.filter(s=>s.sent>0).length;
   const totalSteps=steps.length;
-  document.getElementById('d_stepNote').textContent=totalSteps>0?(
-    stepsWithActivity>0
-      ?`${stepsWithActivity} of ${totalSteps} ${prefix.toLowerCase()} steps executed. ${totalSteps>stepsWithActivity?'Remaining steps are queued and will fire on schedule.':'All steps complete.'}`
-      :`No ${prefix.toLowerCase()} steps have executed yet. All ${totalSteps} steps are queued.`
+  const totalLeads=steps.length>0?steps[0].leads:0;
+  document.getElementById('d_stepNote').innerHTML=totalSteps>0?(
+    `<span>${totalLeads.toLocaleString()} leads assigned to this sequence. ${stepsWithActivity} of ${totalSteps} ${prefix.toLowerCase()} steps executed.${totalSteps>stepsWithActivity?' Remaining steps will fire on schedule.':' All steps complete.'}</span>`
   ):'';
 }
 
