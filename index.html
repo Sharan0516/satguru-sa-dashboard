@@ -256,6 +256,7 @@
       <div class="exec-card">
         <div class="exec-card-title">A/B Message Performance</div>
         <div id="exAB"></div>
+        <div id="exABNote"></div>
       </div>
     </div>
 
@@ -708,10 +709,11 @@ function render(){
   abD+='</div>';
   document.getElementById('d_ab').innerHTML=abD;
 
-  // A/B note: show excluded leads
+  // A/B note: show excluded leads (both views)
   const abTotal=vA.length+vB.length;
   const abExcluded=D.length-abTotal;
-  if(abExcluded>0){
+  const abNoteHtml=(()=>{
+    if(abExcluded<=0)return'';
     const exEmailOnly=D.filter(r=>r.channel==='Email Only'&&r.version!=='A'&&r.version!=='B').length;
     const exLiOnly=D.filter(r=>r.channel==='LinkedIn Only'&&r.version!=='A'&&r.version!=='B').length;
     const exNoVer=D.filter(r=>r.version==='N/A'||r.version==='').length;
@@ -719,12 +721,12 @@ function render(){
     if(exEmailOnly>0)parts.push(`${exEmailOnly} Email Only`);
     if(exLiOnly>0)parts.push(`${exLiOnly} LinkedIn Only`);
     if(exNoVer>0)parts.push(`${exNoVer} non-versioned`);
-    document.getElementById('d_abNote').innerHTML=`<div style="font-size:10px;color:var(--g400);background:var(--g50);border-radius:6px;padding:8px 12px;">
-      Showing <strong>${abTotal}</strong> of ${D.length} leads in A/B-tested sequences. ${abExcluded} leads excluded${parts.length?': '+parts.join(', '):''}.
+    return `<div style="font-size:10px;color:var(--brand);background:var(--brand-05);border:1px solid var(--brand-20);border-radius:6px;padding:8px 12px;margin-top:8px;">
+      &#9432; Showing <strong>${abTotal}</strong> of ${D.length} leads in A/B-tested sequences. <strong>${abExcluded}</strong> leads excluded${parts.length?': '+parts.join(', '):''}.
     </div>`;
-  } else {
-    document.getElementById('d_abNote').innerHTML='';
-  }
+  })();
+  document.getElementById('d_abNote').innerHTML=abNoteHtml;
+  document.getElementById('exABNote').innerHTML=abNoteHtml;
 
   // Sender chart
   const sG=G(D,'sender');const sN=Object.keys(sG).sort();
@@ -736,7 +738,7 @@ function render(){
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{usePointStyle:true,pointStyle:'rectRounded',font:{family:'Inter',size:10},padding:10}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:10}}},y:{grid:{color:'#F1F5F9'},beginAtZero:true,ticks:{font:{size:9}}}}}}));
 
   // Sender table (full funnel breakdown per sender)
-  let stH='<table class="dt" style="font-size:10px;"><thead><tr><th>Sender</th><th class="r">Leads</th><th class="r">Email Sent</th><th class="r">Email Replies</th><th class="r">LI Sent</th><th class="r">Accepted</th><th class="r">DMs Sent</th><th class="r">LI Replies</th><th class="r">Reply Rate</th></tr></thead><tbody>';
+  let stH='<table class="dt" style="font-size:10px;"><thead><tr><th>Sender</th><th class="r">Leads</th><th class="r">Emails Sent</th><th class="r">Email Replies</th><th class="r">Conn. Requests Sent</th><th class="r">Connections Accepted</th><th class="r">DMs Sent</th><th class="r">LinkedIn Replies</th><th class="r">Reply Rate</th></tr></thead><tbody>';
   sN.forEach(s=>{
     const r=sG[s];const eS_s=S(r,'Email Sent');const eR_s=S(r,'Email Replies');
     const lS_s=S(r,'LI Connections Sent');const lA_s=S(r,'LI Connections Accepted');
