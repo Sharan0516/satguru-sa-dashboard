@@ -240,6 +240,7 @@
 
     <!-- Lead Enrichment (inline badges below scoreboard) -->
     <div id="exEnrichment" style="display:flex;gap:8px;margin-bottom:10px;"></div>
+    <div id="exEmailStatus" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;"></div>
 
     <div class="g2">
       <!-- Email Funnel -->
@@ -279,6 +280,7 @@
     </div>
 
     <div style="display:flex;gap:10px;margin-bottom:10px;" id="dEnrichment"></div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;" id="dEmailStatus"></div>
 
     <div class="g2">
       <div class="card">
@@ -577,6 +579,7 @@ function render(){
   document.getElementById('exEmailMetrics').innerHTML=mli([
     ['Total Emails Sent',eS],
     ['Sends per Prospect',eSendsPerLead],
+    ['Bounced',eB],
     ['Reply Rate',eS>0?(eR/eS*100).toFixed(1)+'%':'--'],
   ]);
 
@@ -598,6 +601,25 @@ function render(){
     ['Reply Rate',lS>0?(lR/lS*100).toFixed(1)+'%':'--'],
   ]);
 
+  // Email delivery status chips (shared between exec and detailed)
+  const statusCounts={};
+  D.forEach(r=>{const s=r['Email Delivery Status']||'Unknown';statusCounts[s]=(statusCounts[s]||0)+1});
+  const statusOrder=['Delivered','Bounced','Failed','Processing','Sent','Not Sent','Replied'];
+  const statusColors={'Delivered':'#22C55E','Bounced':'#EF4444','Failed':'#F97316','Processing':'#3B82F6','Sent':'#94A3B8','Not Sent':'#CBD5E1','Replied':'#E94D35','Unknown':'#CBD5E1'};
+  function statusChip(label,count){
+    const c=statusColors[label]||'#CBD5E1';
+    const pct=D.length>0?(count/D.length*100).toFixed(0):0;
+    return `<div style="display:inline-flex;align-items:center;gap:6px;background:${c}10;border:1px solid ${c}30;border-radius:6px;padding:4px 10px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:${c};flex-shrink:0;"></span>
+      <span style="font-size:10px;color:var(--g600);">${label}:</span>
+      <span style="font-size:12px;font-weight:700;color:var(--g900);">${count}</span>
+      <span style="font-size:9px;color:var(--g400);">(${pct}%)</span>
+    </div>`;
+  }
+  let emailStatusHtml='';
+  statusOrder.forEach(s=>{if(statusCounts[s])emailStatusHtml+=statusChip(s,statusCounts[s])});
+  if(statusCounts['Unknown'])emailStatusHtml+=statusChip('Unknown',statusCounts['Unknown']);
+  document.getElementById('exEmailStatus').innerHTML=emailStatusHtml;
 
   // A/B
   const vG=G(D,'version');
@@ -634,6 +656,8 @@ function render(){
     enrichChip('Email Only',emailOnly)+
     enrichChip('LinkedIn Only',liOnly);
 
+  // Email Delivery Status (reuse from exec view)
+  document.getElementById('dEmailStatus').innerHTML=emailStatusHtml;
 
   // Email Funnel Chart (detailed view)
   function funnelChart(canvasId,steps){
@@ -698,6 +722,7 @@ function render(){
   document.getElementById('d_mE').innerHTML=mli([
     ['Total Emails Sent',eS],
     ['Sends per Prospect',eSendsPerLead],
+    ['Bounced',eB],
     ['Reply Rate',eS>0?(eR/eS*100).toFixed(1)+'%':'--'],
   ]);
   document.getElementById('d_mL').innerHTML=mli([
@@ -915,7 +940,7 @@ function renderStepProgress(){
 
   // Headers
   const headHtml=isEmail
-    ?'<tr><th>Step</th><th class="r">Leads Assigned</th><th class="r">Sent</th><th class="r">Delivered</th><th class="r">Replies</th><th class="r">Reply Rate</th></tr>'
+    ?'<tr><th>Step</th><th class="r">Leads Assigned</th><th class="r">Sent</th><th class="r">Delivered</th><th class="r">Bounced</th><th class="r">Replies</th><th class="r">Reply Rate</th></tr>'
     :'<tr><th>Step</th><th>Type</th><th class="r">Leads Assigned</th><th class="r">Sent</th><th class="r">Accepted</th><th class="r">Replies</th><th class="r">Reply Rate</th></tr>';
   document.getElementById('d_stepHead').innerHTML=headHtml;
 
@@ -936,6 +961,7 @@ function renderStepProgress(){
         <td class="r">${leadsCell}</td>
         <td class="r">${s.sent.toLocaleString()}</td>
         <td class="r">${s.delivered.toLocaleString()}</td>
+        <td class="r">${s.bounced>0?'<span style="color:var(--brand);">'+s.bounced.toLocaleString()+'</span>':s.bounced.toLocaleString()}</td>
         <td class="r" style="font-weight:700;${s.replies>0?'color:'+accentColor+';':''}">${s.replies.toLocaleString()}</td>
         <td class="r" style="font-weight:600;">${rr}</td>
       </tr>`;
@@ -951,7 +977,7 @@ function renderStepProgress(){
       </tr>`;
     }
   });
-  document.getElementById('d_stepBody').innerHTML=html||`<tr><td colspan="6" style="text-align:center;color:var(--g400);">No ${prefix.toLowerCase()} steps in this sequence</td></tr>`;
+  document.getElementById('d_stepBody').innerHTML=html||`<tr><td colspan="7" style="text-align:center;color:var(--g400);">No ${prefix.toLowerCase()} steps in this sequence</td></tr>`;
 
   // Note
   const stepsWithActivity=steps.filter(s=>s.sent>0).length;
@@ -1022,6 +1048,8 @@ function renderTracker(D){
   overall+=dataRow('EMAILS SCHEDULED (PENDING)',emailScheduled,undefined,'Email-targeted leads whose emails have not been sent yet');
   overall+=dataRow('EMAILS DELIVERED',eD,undefined,'Emails confirmed delivered to inbox by SendGrid');
   overall+=pctRow('Delivery Rate %',eD,eS);
+  overall+=dataRow('EMAILS BOUNCED',eB,undefined,'Emails that failed to deliver (invalid address, full mailbox, etc.)');
+  overall+=pctRow('Bounce Rate %',eB,eS);
   overall+=dataRow('TOTAL RESPONSE',eR,undefined,'Inbound email replies from leads (excludes auto-replies and out-of-office)');
   overall+=dataRow('QUALIFIED RESPONSE',eR,undefined,'Replies that indicate genuine interest or engagement');
   overall+=pctRow('Reply Rate %',eR,eS);
@@ -1068,6 +1096,8 @@ function renderTracker(D){
   s1+=dataRow('# Emails Scheduled (Pending)',pEmailScheduled);
   s1+=dataRow('# Emails Delivered',pED);
   s1+=pctRow('Delivery Rate %',pED,pES);
+  s1+=dataRow('# Emails Bounced',pEB);
+  s1+=pctRow('Bounce Rate %',pEB,pES);
   s1+=pctRow('Reply Rate %',pER,pES);
   s1+=dataRow('Positive Replies',pER);
   s1+=secRow('LINKEDIN');
@@ -1089,7 +1119,7 @@ function renderTracker(D){
   const emptyMetrics=['# Companies Sourced','# Leads Generated','# Warm Leads Generated','# Phone Nos. Enriched'];
   emptyMetrics.forEach(m=>{ s2+=dataRow(m,'--','--'); });
   s2+=secRow('EMAILS');
-  ['# Emails Sent','# Emails Scheduled','# Email Recipients Sent','Reply Rate %','Positive Replies'].forEach(m=>{ s2+=dataRow(m,'--','--'); });
+  ['# Emails Sent','# Emails Scheduled','# Email Recipients Sent','Reply Rate %','Bounce Rate %','Positive Replies'].forEach(m=>{ s2+=dataRow(m,'--','--'); });
   s2+=secRow('LINKEDIN');
   ['# Connections Sent','# Connections Accepted','# Messages Sent','# Messages Scheduled','Reply Rate %','Positive Replies'].forEach(m=>{ s2+=dataRow(m,'--','--'); });
   s2+='</tbody>';
