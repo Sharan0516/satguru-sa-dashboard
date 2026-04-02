@@ -574,9 +574,11 @@ function render(){
   document.getElementById('exEmailFunnel').innerHTML=buildFunnel(emailFunnel,emailPool);
 
   // Exec email supplementary metrics
+  const ePending=Math.max(0,eS-eD-eR);
   document.getElementById('exEmailMetrics').innerHTML=mli([
     ['Total Emails Sent',eS],
     ['Sends per Prospect',eSendsPerLead],
+    ['Pending to be Sent',ePending],
     ['Reply Rate',eS>0?(eR/eS*100).toFixed(1)+'%':'--'],
   ]);
 
@@ -698,6 +700,7 @@ function render(){
   document.getElementById('d_mE').innerHTML=mli([
     ['Total Emails Sent',eS],
     ['Sends per Prospect',eSendsPerLead],
+    ['Pending to be Sent',ePending],
     ['Reply Rate',eS>0?(eR/eS*100).toFixed(1)+'%':'--'],
   ]);
   document.getElementById('d_mL').innerHTML=mli([
@@ -1020,6 +1023,8 @@ function renderTracker(D){
   overall+=dataRow('TOTAL EMAILS SENT',eS,undefined,'Total email sends including follow-ups (same lead may receive multiple emails)');
   overall+=dataRow('SENDS PER PROSPECT',eS>0&&emailLeads>0?(eS/emailLeads).toFixed(1):'--',undefined,'Average number of emails sent per lead');
   overall+=dataRow('EMAILS SCHEDULED (PENDING)',emailScheduled,undefined,'Email-targeted leads whose emails have not been sent yet');
+  const wtPending=Math.max(0,eS-eD-eR);
+  overall+=dataRow('PENDING TO BE SENT',wtPending,undefined,'Emails sent but not yet confirmed delivered (in transit, retrying, or awaiting confirmation)');
   overall+=dataRow('TOTAL RESPONSE',eR,undefined,'Inbound email replies from leads (excludes auto-replies and out-of-office)');
   overall+=dataRow('QUALIFIED RESPONSE',eR,undefined,'Replies that indicate genuine interest or engagement');
   overall+=pctRow('Reply Rate %',eR,eS);
@@ -1064,6 +1069,8 @@ function renderTracker(D){
   s1+=dataRow('# Total Emails Sent',pES);
   s1+=dataRow('Sends per Prospect',pEmailLeads>0?(pES/pEmailLeads).toFixed(1):'--');
   s1+=dataRow('# Emails Scheduled (Pending)',pEmailScheduled);
+  const pPending=Math.max(0,pES-pED-pER);
+  s1+=dataRow('Pending to be Sent',pPending);
   s1+=pctRow('Reply Rate %',pER,pES);
   s1+=dataRow('Positive Replies',pER);
   s1+=secRow('LINKEDIN');
