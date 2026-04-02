@@ -1020,8 +1020,6 @@ function renderTracker(D){
   overall+=dataRow('TOTAL EMAILS SENT',eS,undefined,'Total email sends including follow-ups (same lead may receive multiple emails)');
   overall+=dataRow('SENDS PER PROSPECT',eS>0&&emailLeads>0?(eS/emailLeads).toFixed(1):'--',undefined,'Average number of emails sent per lead');
   overall+=dataRow('EMAILS SCHEDULED (PENDING)',emailScheduled,undefined,'Email-targeted leads whose emails have not been sent yet');
-  overall+=dataRow('EMAILS DELIVERED',eD,undefined,'Emails confirmed delivered to inbox by SendGrid');
-  overall+=pctRow('Delivery Rate %',eD,eS);
   overall+=dataRow('TOTAL RESPONSE',eR,undefined,'Inbound email replies from leads (excludes auto-replies and out-of-office)');
   overall+=dataRow('QUALIFIED RESPONSE',eR,undefined,'Replies that indicate genuine interest or engagement');
   overall+=pctRow('Reply Rate %',eR,eS);
@@ -1066,8 +1064,6 @@ function renderTracker(D){
   s1+=dataRow('# Total Emails Sent',pES);
   s1+=dataRow('Sends per Prospect',pEmailLeads>0?(pES/pEmailLeads).toFixed(1):'--');
   s1+=dataRow('# Emails Scheduled (Pending)',pEmailScheduled);
-  s1+=dataRow('# Emails Delivered',pED);
-  s1+=pctRow('Delivery Rate %',pED,pES);
   s1+=pctRow('Reply Rate %',pER,pES);
   s1+=dataRow('Positive Replies',pER);
   s1+=secRow('LINKEDIN');
