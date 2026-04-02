@@ -235,7 +235,6 @@
       <div class="sc"><div class="sc-v" id="exEmailS">--</div><div class="sc-l">Emails (Unique / Total)</div></div>
       <div class="sc"><div class="sc-v" id="exLiS">--</div><div class="sc-l">LinkedIn Requests Sent</div></div>
       <div class="sc primary"><div class="sc-v" id="exReply">0</div><div class="sc-l">Replies</div></div>
-      <div class="sc primary"><div class="sc-v" id="exMeet">0</div><div class="sc-l">Meetings Booked</div></div>
     </div>
 
     <!-- Lead Enrichment (inline badges below scoreboard) -->
@@ -273,7 +272,6 @@
       <div class="sc"><div class="sc-v" id="d_email">--</div><div class="sc-l">Emails Sent</div></div>
       <div class="sc"><div class="sc-v" id="d_li">--</div><div class="sc-l">LinkedIn Requests</div></div>
       <div class="sc primary"><div class="sc-v" id="d_reply">--</div><div class="sc-l">Replies</div></div>
-      <div class="sc primary"><div class="sc-v" id="d_meet">--</div><div class="sc-l">Meetings</div></div>
     </div>
 
     <div style="display:flex;gap:10px;margin-bottom:10px;" id="dEnrichment"></div>
@@ -520,7 +518,6 @@ function render(){
   document.getElementById('exLeads').textContent=D.length.toLocaleString();
   document.getElementById('exCos').textContent=U(D,'Company Name').toLocaleString();
   document.getElementById('exReply').textContent=tR.toLocaleString();
-  document.getElementById('exMeet').textContent=meets.toLocaleString();
   document.getElementById('exEmailS').textContent=eUniq+' / '+eS;
   document.getElementById('exLiS').textContent=lS.toLocaleString();
 
@@ -611,7 +608,6 @@ function render(){
   document.getElementById('d_email').textContent=eS.toLocaleString();
   document.getElementById('d_li').textContent=lS.toLocaleString();
   document.getElementById('d_reply').textContent=tR.toLocaleString();
-  document.getElementById('d_meet').textContent=meets.toLocaleString();
 
   // Lead enrichment (detailed view) - reuse same counts from exec
   document.getElementById('dEnrichment').innerHTML=
