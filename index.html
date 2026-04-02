@@ -626,20 +626,19 @@ function render(){
   const vA=vG['A']||[],vB=vG['B']||[];
   let abH='';
   if(vA.length||vB.length){
+    abH='<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">';
     [['A',vA],['B',vB]].forEach(([l,rows])=>{
-      const rep=S(rows,'Total Replies');
       const liSent=S(rows,'LI Connections Sent');
       const liSched=S(rows,'LI Connection Actions');
-      abH+=`<div class="exec-stat"><span class="exec-stat-k">Version ${l}</span><span class="exec-stat-v">${rows.length} leads</span></div>`;
-      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">Email Sent</span><span class="exec-stat-v" style="font-size:12px;">${S(rows,'Email Sent')}</span></div>`;
-      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">LinkedIn sent / accepted</span><span class="exec-stat-v" style="font-size:12px;">${liSent} / ${S(rows,'LI Connections Accepted')}</span></div>`;
-      if(liSched>0&&liSent===0){
-        abH+=`<div style="padding-left:12px;font-size:9px;color:var(--g400);margin-top:-2px;margin-bottom:4px;">${liSched} LinkedIn actions scheduled, pending execution</div>`;
-      }
       const eRep=S(rows,'Email Replies'),lRep=S(rows,'LI Replies');
-      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">Email Replies</span><span class="exec-stat-v${eRep>0?' hl':' z'}" style="font-size:12px;">${eRep}</span></div>`;
-      abH+=`<div class="exec-stat"><span class="exec-stat-k" style="padding-left:12px;color:var(--g400);">LinkedIn Replies</span><span class="exec-stat-v${lRep>0?' hl':' z'}" style="font-size:12px;">${lRep}</span></div>`;
+      abH+=`<div style="padding:0 14px 10px;${l==='B'?'border-left:1px solid var(--g100);':''}">
+        <div style="font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;margin-bottom:8px;">Version ${l}</div>
+        <div style="font-size:20px;font-weight:800;">${rows.length} <span style="font-size:11px;font-weight:500;color:var(--g400);">leads</span></div>
+        <ul class="ml" style="margin-top:8px;">${mli([['Email Sent',S(rows,'Email Sent')],['LinkedIn sent / accepted',liSent+' / '+S(rows,'LI Connections Accepted')],['Email Replies',eRep],['LinkedIn Replies',lRep]])}</ul>
+        ${liSched>0&&liSent===0?`<div style="font-size:9px;color:var(--g400);margin-top:4px;">${liSched} LinkedIn actions scheduled, pending execution</div>`:''}
+      </div>`;
     });
+    abH+='</div>';
   } else { abH='<div style="color:var(--g400);font-size:12px;">No A/B test data in current filter</div>'; }
   document.getElementById('exAB').innerHTML=abH;
 
