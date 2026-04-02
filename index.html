@@ -1076,7 +1076,6 @@ function renderTracker(D){
   s1+=pctRow('Bounce Rate %',pEB,pES);
   s1+=pctRow('Reply Rate %',pER,pES);
   s1+=dataRow('Positive Replies',pER);
-  s1+=dataRow('Meetings Booked via Email',pMeetings);
   s1+=secRow('LINKEDIN');
   s1+=dataRow('# Unique Leads Targeted',pLiLeads);
   s1+=dataRow('# Conn. Actions Scheduled',S(pharmaD,'LI Connection Actions'));
@@ -1087,9 +1086,6 @@ function renderTracker(D){
   s1+=dataRow('# DMs Sent (post-accept)',pLM);
   s1+=pctRow('Reply Rate %',pLR,pLS);
   s1+=dataRow('Positive Replies',pLR);
-  s1+=dataRow('Meetings Booked via LinkedIn',0);
-  s1+=`<tr class="section-row"><td colspan="${WK_COLS+2}">TOTAL</td></tr>`;
-  s1+=dataRow('Total Meetings Booked',pMeetings);
   s1+='</tbody>';
   document.getElementById('wtS1').innerHTML=s1;
 
@@ -1099,11 +1095,9 @@ function renderTracker(D){
   const emptyMetrics=['# Companies Sourced','# Leads Generated','# Warm Leads Generated','# Phone Nos. Enriched'];
   emptyMetrics.forEach(m=>{ s2+=dataRow(m,'--','--'); });
   s2+=secRow('EMAILS');
-  ['# Emails Sent','# Emails Scheduled','# Email Recipients Sent','Reply Rate %','Bounce Rate %','Positive Replies','Meetings Booked via Email'].forEach(m=>{ s2+=dataRow(m,'--','--'); });
+  ['# Emails Sent','# Emails Scheduled','# Email Recipients Sent','Reply Rate %','Bounce Rate %','Positive Replies'].forEach(m=>{ s2+=dataRow(m,'--','--'); });
   s2+=secRow('LINKEDIN');
-  ['# Connections Sent','# Connections Accepted','# Messages Sent','# Messages Scheduled','Reply Rate %','Positive Replies','Meetings Booked via LinkedIn'].forEach(m=>{ s2+=dataRow(m,'--','--'); });
-  s2+=`<tr class="section-row"><td colspan="${WK_COLS+2}">TOTAL</td></tr>`;
-  s2+=dataRow('Total Meetings Booked','--','--');
+  ['# Connections Sent','# Connections Accepted','# Messages Sent','# Messages Scheduled','Reply Rate %','Positive Replies'].forEach(m=>{ s2+=dataRow(m,'--','--'); });
   s2+='</tbody>';
   document.getElementById('wtS2').innerHTML=s2;
 }
